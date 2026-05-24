@@ -153,7 +153,7 @@ export default function Products() {
   return (
     <div className="space-y-6 max-w-4xl pb-12">
       {/* Header */}
-      <div className="flex items-start justify-between gap-4">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
           <h1 className="text-2xl font-bold text-[var(--text-primary)] mb-1">Productos</h1>
           <p className="text-[var(--text-secondary)] text-sm">
@@ -164,14 +164,14 @@ export default function Products() {
         <div className="flex items-center gap-2">
           <button
             onClick={() => setIsCategoryModalOpen(true)}
-            className="flex items-center justify-center h-[44px] px-4 rounded-[4px] font-bold text-[14px] bg-[var(--surface-inset)] text-[var(--text-primary)] hover:bg-[var(--border-subtle)] transition-colors shrink-0"
+            className="flex items-center justify-center h-[40px] px-4 rounded-md font-medium text-[14px] bg-white border border-neutral-200 text-neutral-700 hover:bg-neutral-50 shadow-sm transition-colors shrink-0"
           >
-            <Folder size={18} className="mr-2" />
+            <Folder size={18} className="mr-2 text-neutral-400" />
             Categorías
           </button>
           <button
             onClick={openNew}
-            className="flex items-center gap-2 px-4 h-[44px] tactile-btn font-bold text-[14px] text-white shrink-0"
+            className="flex items-center gap-2 px-4 h-[40px] rounded-md font-medium text-[14px] text-white shadow-sm shrink-0 transition-colors hover:opacity-90"
             style={{ backgroundColor: 'var(--brand-dark)' }}
           >
             <Plus size={18} />
@@ -183,40 +183,40 @@ export default function Products() {
       {/* Mobile Cards */}
       <div className="flex flex-col gap-3 md:hidden">
         {products.length === 0 ? (
-          <div className="tactile-card bg-[var(--surface-1)] p-8 text-center text-[var(--text-tertiary)]">
+          <div className="bg-white border border-neutral-200 rounded-lg p-8 text-center text-[var(--text-tertiary)] shadow-sm">
             <ImageIcon size={32} className="mx-auto mb-3 opacity-40" />
             <p className="text-sm font-medium">Todavía no tenés productos.</p>
             <p className="text-xs mt-1">Tocá "Nuevo producto" para empezar.</p>
           </div>
         ) : products.map(p => (
-          <div key={p.id} className="tactile-card bg-[var(--surface-1)] flex items-center gap-3 p-3 cursor-pointer">
-            <div className="w-[64px] h-[64px] shrink-0 rounded-[3px] overflow-hidden bg-[var(--surface-inset)]">
+          <div key={p.id} className="bg-white border border-neutral-200 rounded-lg shadow-sm flex items-center gap-3 p-3 cursor-pointer hover:border-neutral-300 transition-colors">
+            <div className="w-[64px] h-[64px] shrink-0 rounded-md overflow-hidden bg-neutral-50 border border-neutral-100">
               {p.image_url
                 ? <img src={p.image_url} alt={p.name} className="w-full h-full object-cover" />
                 : <div className="w-full h-full flex items-center justify-center text-[var(--text-muted)]"><ImageIcon size={20} /></div>
               }
             </div>
-            <div className="flex-1 min-w-0">
+            <div className="flex-1 min-w-0 py-0.5">
               <div className="flex items-center gap-2 mb-0.5">
-                <h3 className="font-bold text-[14px] text-[var(--text-primary)] truncate">{p.name}</h3>
+                <h3 className="font-semibold text-[14px] text-neutral-900 truncate">{p.name}</h3>
                 {p.is_featured && <span className="text-[10px] font-bold bg-amber-50 text-amber-700 border border-amber-200 px-1.5 py-0.5 rounded shrink-0">★ DEST.</span>}
               </div>
               <div className="flex items-center gap-2">
-                <span className="font-bold text-[15px] text-[var(--text-primary)]">${p.price}</span>
-                {p.original_price && <span className="text-[12px] text-[var(--text-tertiary)] line-through">${p.original_price}</span>}
+                <span className="font-semibold text-[15px] text-neutral-900">${p.price}</span>
+                {p.original_price && <span className="text-[12px] text-neutral-400 line-through">${p.original_price}</span>}
               </div>
-              <span className={`inline-block mt-1 text-[11px] font-bold px-2 py-0.5 rounded ${p.available ? 'bg-emerald-50 text-emerald-700' : 'bg-[var(--surface-inset)] text-[var(--text-tertiary)]'}`}>
-                {p.available ? '● Disponible' : '○ Pausado'}
+              <span className={`inline-flex items-center mt-1 text-[11px] font-medium px-2 py-0.5 rounded ${p.available ? 'bg-emerald-50 text-emerald-700' : 'bg-neutral-100 text-neutral-500'}`}>
+                {p.available ? 'Disponible' : 'Pausado'}
               </span>
             </div>
-            <div className="flex flex-col gap-1 shrink-0">
-              <button onClick={() => handleToggleFeatured(p)} className={`w-[36px] h-[36px] flex items-center justify-center rounded transition-colors ${p.is_featured ? 'text-amber-500' : 'text-[var(--text-muted)] hover:text-amber-400'}`}>
+            <div className="flex flex-col gap-1.5 shrink-0 pl-2 border-l border-neutral-100">
+              <button onClick={() => handleToggleFeatured(p)} className={`w-[32px] h-[32px] flex items-center justify-center rounded transition-colors ${p.is_featured ? 'text-amber-500 bg-amber-50' : 'text-neutral-400 hover:text-amber-500 hover:bg-amber-50'}`}>
                 <Star size={16} fill={p.is_featured ? 'currentColor' : 'none'} />
               </button>
-              <button onClick={() => { setEditingProduct(p); setIsModalOpen(true); }} className="w-[36px] h-[36px] flex items-center justify-center rounded text-[var(--text-tertiary)] hover:text-[var(--text-primary)] transition-colors">
+              <button onClick={() => { setEditingProduct(p); setIsModalOpen(true); }} className="w-[32px] h-[32px] flex items-center justify-center rounded text-neutral-400 hover:text-neutral-900 hover:bg-neutral-100 transition-colors">
                 <Edit2 size={16} />
               </button>
-              <button onClick={() => handleDelete(p.id)} className="w-[36px] h-[36px] flex items-center justify-center rounded text-[var(--text-muted)] hover:text-[var(--color-destructive)] transition-colors">
+              <button onClick={() => handleDelete(p.id)} className="w-[32px] h-[32px] flex items-center justify-center rounded text-neutral-400 hover:text-red-600 hover:bg-red-50 transition-colors">
                 <Trash2 size={16} />
               </button>
             </div>
@@ -225,69 +225,69 @@ export default function Products() {
       </div>
 
       {/* Desktop Table */}
-      <div className="hidden md:block tactile-card bg-[var(--surface-1)] overflow-hidden">
+      <div className="hidden md:block bg-white border border-neutral-200 rounded-lg shadow-sm overflow-hidden">
         <table className="w-full text-left">
-          <thead>
-            <tr className="border-b border-[var(--border-subtle)]">
-              <th className="px-5 py-3 text-[12px] font-bold text-[var(--text-tertiary)] uppercase tracking-wider w-[72px]">Foto</th>
-              <th className="px-5 py-3 text-[12px] font-bold text-[var(--text-tertiary)] uppercase tracking-wider">Nombre</th>
-              <th className="px-5 py-3 text-[12px] font-bold text-[var(--text-tertiary)] uppercase tracking-wider">Precio</th>
-              <th className="px-5 py-3 text-[12px] font-bold text-[var(--text-tertiary)] uppercase tracking-wider">Estado</th>
-              <th className="px-5 py-3 text-[12px] font-bold text-[var(--text-tertiary)] uppercase tracking-wider text-right">Acciones</th>
+          <thead className="bg-neutral-50 border-b border-neutral-200">
+            <tr>
+              <th className="px-6 py-3.5 text-[12px] font-semibold text-neutral-500 uppercase tracking-wider w-[80px]">Foto</th>
+              <th className="px-6 py-3.5 text-[12px] font-semibold text-neutral-500 uppercase tracking-wider">Nombre</th>
+              <th className="px-6 py-3.5 text-[12px] font-semibold text-neutral-500 uppercase tracking-wider">Precio</th>
+              <th className="px-6 py-3.5 text-[12px] font-semibold text-neutral-500 uppercase tracking-wider">Estado</th>
+              <th className="px-6 py-3.5 text-[12px] font-semibold text-neutral-500 uppercase tracking-wider text-right">Acciones</th>
             </tr>
           </thead>
-          <tbody>
+          <tbody className="divide-y divide-neutral-100">
             {products.length === 0 ? (
               <tr>
-                <td colSpan={5} className="px-5 py-12 text-center text-[var(--text-tertiary)] text-sm">
+                <td colSpan={5} className="px-6 py-12 text-center text-neutral-500 text-sm">
                   No tenés productos todavía. Creá el primero arriba.
                 </td>
               </tr>
             ) : products.map(p => (
-              <tr key={p.id} className="border-b border-[var(--border-subtle)] hover:bg-[var(--surface-inset)] transition-colors">
-                <td className="px-5 py-3">
-                  <div className="w-[48px] h-[48px] rounded-[3px] overflow-hidden bg-[var(--surface-inset)]">
+              <tr key={p.id} className="hover:bg-neutral-50/50 transition-colors">
+                <td className="px-6 py-4">
+                  <div className="w-[48px] h-[48px] rounded-md overflow-hidden bg-neutral-50 border border-neutral-100">
                     {p.image_url
                       ? <img src={p.image_url} alt={p.name} className="w-full h-full object-cover" />
-                      : <div className="w-full h-full flex items-center justify-center text-[var(--text-muted)]"><ImageIcon size={16} /></div>
+                      : <div className="w-full h-full flex items-center justify-center text-neutral-300"><ImageIcon size={16} /></div>
                     }
                   </div>
                 </td>
-                <td className="px-5 py-3">
+                <td className="px-6 py-4">
                   <div className="flex items-center gap-2">
-                    <span className="font-bold text-[14px] text-[var(--text-primary)]">{p.name}</span>
+                    <span className="font-semibold text-[14px] text-neutral-900">{p.name}</span>
                     {p.is_featured && <span className="text-[10px] font-bold bg-amber-50 text-amber-700 border border-amber-200 px-1.5 py-0.5 rounded">★ DESTACADO</span>}
                   </div>
-                  {p.description && <p className="text-[12px] text-[var(--text-tertiary)] mt-0.5 truncate max-w-[240px]">{p.description}</p>}
+                  {p.description && <p className="text-[13px] text-neutral-500 mt-0.5 truncate max-w-[280px]">{p.description}</p>}
                 </td>
-                <td className="px-5 py-3">
-                  <span className="font-bold text-[15px] text-[var(--text-primary)]">${p.price}</span>
-                  {p.original_price && <span className="text-[12px] text-[var(--text-tertiary)] line-through ml-2">${p.original_price}</span>}
+                <td className="px-6 py-4">
+                  <span className="font-semibold text-[15px] text-neutral-900">${p.price}</span>
+                  {p.original_price && <span className="text-[13px] text-neutral-400 line-through ml-2">${p.original_price}</span>}
                 </td>
-                <td className="px-5 py-3">
-                  <span className={`inline-flex items-center gap-1.5 text-[12px] font-bold px-2.5 py-1 rounded ${p.available ? 'bg-emerald-50 text-emerald-700' : 'bg-[var(--surface-inset)] text-[var(--text-tertiary)]'}`}>
+                <td className="px-6 py-4">
+                  <span className={`inline-flex items-center gap-1.5 text-[12px] font-medium px-2.5 py-1 rounded-md ${p.available ? 'bg-emerald-50 text-emerald-700 border border-emerald-100' : 'bg-neutral-100 text-neutral-600 border border-neutral-200'}`}>
                     <span className={`w-1.5 h-1.5 rounded-full inline-block ${p.available ? 'bg-emerald-500' : 'bg-neutral-400'}`}></span>
                     {p.available ? 'Disponible' : 'Pausado'}
                   </span>
                 </td>
-                <td className="px-5 py-3 text-right">
-                  <div className="flex items-center justify-end gap-1">
+                <td className="px-6 py-4 text-right">
+                  <div className="flex items-center justify-end gap-1.5">
                     <button
                       onClick={() => handleToggleFeatured(p)}
                       title={p.is_featured ? 'Quitar destacado' : 'Destacar'}
-                      className={`w-[36px] h-[36px] flex items-center justify-center rounded transition-colors ${p.is_featured ? 'text-amber-500 bg-amber-50' : 'text-[var(--text-muted)] hover:text-amber-400 hover:bg-amber-50'}`}
+                      className={`w-[36px] h-[36px] flex items-center justify-center rounded-md transition-colors ${p.is_featured ? 'text-amber-500 bg-amber-50' : 'text-neutral-400 hover:text-amber-500 hover:bg-amber-50'}`}
                     >
                       <Star size={16} fill={p.is_featured ? 'currentColor' : 'none'} />
                     </button>
                     <button
                       onClick={() => { setEditingProduct(p); setIsModalOpen(true); }}
-                      className="w-[36px] h-[36px] flex items-center justify-center rounded text-[var(--text-tertiary)] hover:text-[var(--text-primary)] hover:bg-[var(--surface-inset)] transition-colors"
+                      className="w-[36px] h-[36px] flex items-center justify-center rounded-md text-neutral-400 hover:text-neutral-900 hover:bg-neutral-100 transition-colors"
                     >
                       <Edit2 size={16} />
                     </button>
                     <button
                       onClick={() => handleDelete(p.id)}
-                      className="w-[36px] h-[36px] flex items-center justify-center rounded text-[var(--text-muted)] hover:text-[var(--color-destructive)] hover:bg-red-50 transition-colors"
+                      className="w-[36px] h-[36px] flex items-center justify-center rounded-md text-neutral-400 hover:text-red-600 hover:bg-red-50 transition-colors"
                     >
                       <Trash2 size={16} />
                     </button>
@@ -454,14 +454,14 @@ export default function Products() {
               </div>
 
               {/* Modal Footer */}
-              <div className="flex gap-3 px-5 py-4 border-t border-[var(--border-subtle)] bg-[var(--surface-1)] shrink-0 pb-8 md:pb-4">
-                <button type="button" onClick={() => setIsModalOpen(false)} className="flex-1 h-[44px] border border-[var(--border-default)] rounded-[4px] font-bold text-[14px] text-[var(--text-secondary)] hover:bg-[var(--surface-inset)] transition-colors">
+              <div className="flex gap-3 px-6 py-5 border-t border-neutral-100 bg-neutral-50 shrink-0 pb-8 md:pb-5">
+                <button type="button" onClick={() => setIsModalOpen(false)} className="flex-1 h-[44px] bg-white border border-neutral-200 rounded-md font-medium text-[14px] text-neutral-700 hover:bg-neutral-50 transition-colors shadow-sm">
                   Cancelar
                 </button>
                 <button
                   type="submit"
                   disabled={saving}
-                  className="flex-1 h-[44px] tactile-btn font-bold text-[14px] text-white disabled:opacity-50"
+                  className="flex-1 h-[44px] rounded-md font-medium text-[14px] text-white disabled:opacity-50 transition-all hover:opacity-90 shadow-sm"
                   style={{ backgroundColor: 'var(--brand-dark)' }}
                 >
                   {saving ? 'Guardando...' : editingProduct.id ? 'Guardar cambios' : 'Crear producto'}

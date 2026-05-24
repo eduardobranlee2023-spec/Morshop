@@ -41,7 +41,6 @@ export default function PublicStore() {
   const [addedMessageId, setAddedMessageId] = useState<string | null>(null);
   const [activeBannerIndex, setActiveBannerIndex] = useState(0);
   const bannerScrollRef = useRef<HTMLDivElement>(null);
-  const autoplayRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
   useEffect(() => {
     async function fetchStore() {
@@ -276,44 +275,61 @@ export default function PublicStore() {
     return (
       <div 
         onClick={() => setSelectedProduct(product)}
-        className="bg-[var(--surface-1)] tactile-card overflow-hidden cursor-pointer flex flex-col h-full"
+        className="group overflow-hidden cursor-pointer flex flex-col h-full bg-white transition-all hover:shadow-[0_8px_30px_rgb(0,0,0,0.04)] rounded-md border border-neutral-100"
       >
-        <div className="aspect-square bg-neutral-100 relative w-full shrink-0">
+        <div className="aspect-[4/5] bg-neutral-100 relative w-full shrink-0 overflow-hidden">
           {product.original_price && (
-            <div className="absolute top-2 left-2 z-10 bg-[#E53E3E] text-white text-[10px] font-bold px-1.5 py-0.5 rounded">
-              OFERTA
+            <div className="absolute top-2 left-2 z-10 bg-black text-white text-[10px] font-bold tracking-wider px-2 py-1 uppercase">
+              Oferta
             </div>
           )}
           {product.is_featured && (
-            <div className="absolute top-2 right-2 z-10 bg-[#D4A017] text-white text-[10px] font-bold px-1.5 py-0.5 rounded">
-              DESTACADO
+            <div className="absolute top-2 right-2 z-10 bg-[#D4A017] text-white text-[10px] font-bold tracking-wider px-2 py-1 uppercase">
+              Destacado
             </div>
           )}
 
           {product.image_url ? (
-            <img src={product.image_url} alt={product.name} className="w-full h-full object-cover" />
+            <img src={product.image_url} alt={product.name} className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105" />
           ) : (
             <div className="w-full h-full flex items-center justify-center text-neutral-300">
               <ImageIcon size={24} />
             </div>
           )}
-        </div>
-        <div className="p-3 flex flex-col flex-1">
-          <h3 className="text-[13px] font-bold text-neutral-900 mb-1 line-clamp-2">{product.name}</h3>
-          <div className="mt-auto mb-3">
-            {product.original_price && <div className="text-[11px] text-neutral-400 line-through">${product.original_price}</div>}
-            <div className="text-[15px] font-bold leading-none mt-0.5" style={{ color: 'var(--theme-primary)' }}>${product.price}</div>
+          
+          {/* Desktop Hover Quick Add Button */}
+          <div className="absolute bottom-0 left-0 right-0 p-3 translate-y-full opacity-0 group-hover:translate-y-0 group-hover:opacity-100 transition-all duration-300 hidden md:block">
+            <button
+              onClick={(e) => addToCart(product, 1, e)}
+              disabled={!product.available}
+              className="w-full h-[40px] text-[13px] font-semibold tracking-wide flex items-center justify-center shadow-lg"
+              style={{ 
+                backgroundColor: product.available ? (isAdded ? 'var(--color-success)' : 'var(--theme-primary)') : '#f5f5f5',
+                color: product.available ? 'white' : '#a3a3a3'
+              }}
+            >
+              {product.available ? (isAdded ? 'Agregado' : 'Añadir al carrito') : 'Agotado'}
+            </button>
           </div>
+        </div>
+        <div className="p-4 flex flex-col flex-1">
+          <h3 className="text-[14px] font-medium text-neutral-800 mb-1.5 line-clamp-2 leading-snug">{product.name}</h3>
+          <div className="mt-auto flex flex-col">
+            {product.original_price && <div className="text-[12px] text-neutral-400 line-through mb-0.5">${product.original_price}</div>}
+            <div className="text-[16px] font-semibold leading-none text-neutral-900">${product.price}</div>
+          </div>
+          {/* Mobile Always Visible Button */}
           <button
             onClick={(e) => addToCart(product, 1, e)}
             disabled={!product.available}
-            className="w-full h-[36px] tactile-btn text-[12px] font-bold transition-all flex items-center justify-center shrink-0 mt-1"
+            className="w-full h-[36px] text-[12px] font-medium transition-colors flex items-center justify-center shrink-0 mt-3 md:hidden border rounded-sm"
             style={{ 
-              backgroundColor: product.available ? (isAdded ? 'var(--color-success)' : 'var(--theme-primary)') : 'var(--text-muted)',
-              color: 'white'
+              backgroundColor: product.available ? (isAdded ? 'var(--color-success)' : 'transparent') : '#f5f5f5',
+              color: product.available ? (isAdded ? 'white' : 'var(--theme-primary)') : '#a3a3a3',
+              borderColor: product.available ? (isAdded ? 'var(--color-success)' : 'var(--theme-primary)') : '#f5f5f5'
             }}
           >
-            {product.available ? (isAdded ? '✓ Agregado' : '🛒 Agregar al carrito') : 'Sin stock'}
+            {product.available ? (isAdded ? '✓ Agregado' : 'Añadir al carrito') : 'Agotado'}
           </button>
         </div>
       </div>
@@ -330,29 +346,29 @@ export default function PublicStore() {
         </div>
       )}
 
-      {/* 2. Header — ALWAYS visible, 60px fixed */}
-      <header style={{ backgroundColor: 'var(--theme-secondary)', height: '60px', borderBottom: '1px solid rgba(0,0,0,0.1)' }}>
-        <div className="h-full px-4 flex items-center justify-between max-w-7xl mx-auto">
+      {/* 2. Header — Minimalist & Professional */}
+      <header className="sticky top-0 z-40 bg-white/95 backdrop-blur-md border-b border-neutral-100" style={{ height: '64px' }}>
+        <div className="h-full px-4 md:px-8 flex items-center justify-between max-w-7xl mx-auto">
           <div className="flex items-center min-w-0">
             {store.logo_url ? (
-              <img src={store.logo_url} alt={store.name} className="h-[40px] w-auto object-contain mr-3 shrink-0" />
+              <img src={store.logo_url} alt={store.name} className="h-[36px] md:h-[44px] w-auto object-contain mr-3 shrink-0" />
             ) : (
-              <div className="h-[40px] w-[40px] shrink-0 rounded-full flex items-center justify-center text-white font-bold text-lg mr-3" style={{ backgroundColor: 'var(--theme-primary)' }}>
+              <div className="h-[36px] w-[36px] shrink-0 rounded-full flex items-center justify-center text-white font-bold text-lg mr-3" style={{ backgroundColor: 'var(--theme-primary)' }}>
                 {store.name.charAt(0).toUpperCase()}
               </div>
             )}
-            <h1 className="font-bold truncate text-[16px]" style={{ color: 'var(--theme-primary)' }}>
+            <h1 className="font-semibold truncate text-[16px] md:text-[18px] text-neutral-900 tracking-tight">
               {store.name}
             </h1>
           </div>
           <button 
             onClick={() => setIsCartOpen(true)}
-            className="relative p-2 shrink-0 ml-2"
+            className="relative p-2 shrink-0 ml-2 text-neutral-800 hover:text-black transition-colors"
           >
-            <ShoppingCart size={24} style={{ color: 'var(--theme-primary)' }} />
+            <ShoppingCart size={22} strokeWidth={1.5} />
             {cartCount > 0 && (
               <div 
-                className="absolute top-0 right-0 w-[18px] h-[18px] rounded-full flex items-center justify-center text-[10px] font-bold text-white border-2 border-white box-content"
+                className="absolute top-1 right-0 w-[18px] h-[18px] rounded-full flex items-center justify-center text-[10px] font-bold text-white shadow-sm"
                 style={{ backgroundColor: 'var(--theme-primary)' }}
               >
                 {cartCount}
@@ -594,9 +610,9 @@ export default function PublicStore() {
             </button>
             
             {/* Scrolling Content Area */}
-            <div className="overflow-y-auto flex-1 no-scrollbar">
+            <div className="overflow-y-auto flex-1 no-scrollbar md:flex md:flex-row md:w-[900px]">
               {/* Image */}
-              <div className="aspect-square w-full bg-[#f0f0f0] relative shrink-0">
+              <div className="w-full md:w-1/2 aspect-[4/5] md:aspect-auto md:h-full bg-neutral-50 relative shrink-0">
                 {selectedProduct.image_url ? (
                   <img src={selectedProduct.image_url} alt={selectedProduct.name} className="w-full h-full object-cover" />
                 ) : (
@@ -604,67 +620,60 @@ export default function PublicStore() {
                     <ImageIcon size={48} />
                   </div>
                 )}
+                {selectedProduct.original_price && (
+                  <span className="absolute top-4 left-4 bg-black text-white text-[11px] font-bold tracking-wider px-3 py-1.5 uppercase shadow-sm">
+                    OFERTA
+                  </span>
+                )}
               </div>
               
               {/* Info */}
-              <div className="p-[16px]">
-                <div className="flex gap-2 mb-3">
-                  {selectedProduct.original_price && (
-                    <span className="bg-[#E53E3E] text-white text-[11px] font-bold px-2 py-0.5 rounded">
-                      OFERTA
-                    </span>
-                  )}
-                  {selectedProduct.is_featured && (
-                    <span className="bg-[#D4A017] text-white text-[11px] font-bold px-2 py-0.5 rounded">
-                      DESTACADO
-                    </span>
-                  )}
-                </div>
-
-                <h2 className="text-[20px] font-bold text-[#1a1a1a] leading-tight mb-3">
+              <div className="p-6 md:p-8 md:w-1/2 flex flex-col">
+                <h2 className="text-[24px] md:text-[28px] font-medium text-neutral-900 leading-tight mb-4 tracking-tight">
                   {selectedProduct.name}
                 </h2>
                 
-                <div className="mb-4 flex flex-col">
-                  {selectedProduct.original_price && <span className="text-[#888] line-through text-[13px] leading-none mb-1">${selectedProduct.original_price}</span>}
-                  <span className="text-[26px] font-bold leading-none" style={{ color: 'var(--theme-primary)' }}>${selectedProduct.price}</span>
+                <div className="mb-6 flex items-end gap-3">
+                  <span className="text-[28px] font-semibold leading-none text-neutral-900">${selectedProduct.price}</span>
+                  {selectedProduct.original_price && <span className="text-neutral-400 line-through text-[16px] leading-snug mb-1">${selectedProduct.original_price}</span>}
                 </div>
                 
-                <div className="mb-5">
-                  <span className={`inline-flex items-center px-3 py-1 rounded-full text-[12px] font-bold ${selectedProduct.available ? 'bg-[#e6f4ea] text-[#137333]' : 'bg-neutral-100 text-neutral-600'}`}>
-                    {selectedProduct.available ? '✓ Disponible' : '✗ Sin stock'}
+                <div className="mb-8">
+                  <span className={`inline-flex items-center px-3 py-1 rounded-sm text-[12px] font-medium ${selectedProduct.available ? 'bg-[#e6f4ea] text-[#137333]' : 'bg-neutral-100 text-neutral-600'}`}>
+                    {selectedProduct.available ? 'Disponible en stock' : 'Agotado actualmente'}
                   </span>
                 </div>
                 
                 {selectedProduct.description && (
-                  <>
-                    <div className="pb-4">
-                      <p className="text-[14px] text-[#4a4a4a] whitespace-pre-wrap leading-[1.6]">{selectedProduct.description}</p>
-                    </div>
-                    <div className="w-full h-px bg-[#f0f0f0] my-4"></div>
-                  </>
+                  <div className="pb-6 mb-auto">
+                    <h3 className="text-[13px] font-semibold text-neutral-900 uppercase tracking-wider mb-3">Descripción</h3>
+                    <p className="text-[15px] text-neutral-600 whitespace-pre-wrap leading-[1.7]">{selectedProduct.description}</p>
+                  </div>
                 )}
+
+                {/* Mobile spacer for fixed bottom area */}
+                <div className="h-6 md:hidden"></div>
               </div>
             </div>
 
             {/* Sticky Bottom Action Area */}
-            <div className="p-[16px] bg-white border-t border-[#f0f0f0] shrink-0 pb-6 md:pb-4">
-              <div className="flex items-center gap-3 mb-2">
-                <div className="flex items-center border border-neutral-200 rounded-lg overflow-hidden h-[44px]">
+            <div className="p-4 md:p-8 bg-white border-t border-neutral-100 shrink-0 md:w-1/2 md:absolute md:bottom-0 md:right-0 md:border-t-0 md:pt-0">
+              <div className="flex items-center gap-3 mb-3">
+                <div className="flex items-center border border-neutral-300 rounded-sm overflow-hidden h-[48px] w-[110px] shrink-0">
                   <button 
                     onClick={() => setModalQuantity(Math.max(1, modalQuantity - 1))}
                     disabled={!selectedProduct.available || modalQuantity <= 1}
-                    className="w-[36px] h-full flex items-center justify-center text-neutral-600 disabled:opacity-50"
+                    className="w-[36px] h-full flex items-center justify-center text-neutral-600 disabled:opacity-50 hover:bg-neutral-50 transition-colors"
                   >
                     <Minus size={16} />
                   </button>
-                  <div className="w-[36px] h-full flex items-center justify-center font-bold text-[14px]">
+                  <div className="flex-1 h-full flex items-center justify-center font-medium text-[15px]">
                     {modalQuantity}
                   </div>
                   <button 
                     onClick={() => setModalQuantity(modalQuantity + 1)}
                     disabled={!selectedProduct.available}
-                    className="w-[36px] h-full flex items-center justify-center text-neutral-600 disabled:opacity-50"
+                    className="w-[36px] h-full flex items-center justify-center text-neutral-600 disabled:opacity-50 hover:bg-neutral-50 transition-colors"
                   >
                     <Plus size={16} />
                   </button>
@@ -672,7 +681,7 @@ export default function PublicStore() {
                 <button 
                   onClick={() => addToCart(selectedProduct, modalQuantity)}
                   disabled={!selectedProduct.available}
-                  className="flex-1 h-[44px] rounded-lg font-bold text-white text-[14px] flex items-center justify-center disabled:opacity-50 transition-transform active:scale-[0.98]"
+                  className="flex-1 h-[48px] rounded-sm font-semibold tracking-wide text-white text-[14px] flex items-center justify-center disabled:opacity-50 transition-all hover:opacity-90"
                   style={{ backgroundColor: selectedProduct.available ? 'var(--theme-primary)' : '#ccc' }}
                 >
                   Agregar al carrito
@@ -683,14 +692,14 @@ export default function PublicStore() {
                 <button 
                   onClick={() => handleWhatsAppProduct(selectedProduct, modalQuantity)}
                   disabled={!selectedProduct.available}
-                  className="w-full h-[50px] rounded-[8px] font-bold text-white text-[15px] flex items-center justify-center disabled:opacity-50 disabled:bg-neutral-400 mt-[8px] transition-transform active:scale-[0.98]"
+                  className="w-full h-[48px] rounded-sm font-semibold tracking-wide text-white text-[14px] flex items-center justify-center disabled:opacity-50 disabled:bg-neutral-300 transition-all hover:opacity-90 mt-1"
                   style={{ backgroundColor: selectedProduct.available ? '#25D366' : '' }}
                 >
-                  {selectedProduct.available ? '💬 Consultar por WhatsApp' : 'Sin stock'}
+                  {selectedProduct.available ? 'Consultar por WhatsApp' : 'Agotado'}
                 </button>
               ) : (
-                <div className="w-full h-[50px] rounded-[8px] bg-neutral-100 text-neutral-500 flex items-center justify-center font-medium text-[14px] mt-[8px]">
-                  El vendedor no configuró WhatsApp aún.
+                <div className="w-full h-[48px] rounded-sm bg-neutral-100 text-neutral-500 flex items-center justify-center font-medium text-[13px] mt-1">
+                  WhatsApp no configurado
                 </div>
               )}
             </div>
@@ -706,28 +715,28 @@ export default function PublicStore() {
             onClick={e => e.stopPropagation()}
           >
             {/* Cart Header */}
-            <div className="h-[72px] border-b border-neutral-100 flex items-center justify-between px-5 shrink-0">
-              <h2 className="font-bold text-[18px]">Tu pedido</h2>
+            <div className="h-[70px] border-b border-neutral-100 flex items-center justify-between px-6 shrink-0">
+              <h2 className="font-semibold text-[16px] tracking-tight text-neutral-900">Tu pedido</h2>
               <button 
                 onClick={() => setIsCartOpen(false)}
-                className="w-[44px] h-[44px] flex items-center justify-center rounded-full hover:bg-neutral-100 text-neutral-500"
+                className="w-[36px] h-[36px] flex items-center justify-center rounded-full hover:bg-neutral-50 text-neutral-400 transition-colors"
               >
-                <X size={24} />
+                <X size={20} />
               </button>
             </div>
 
             {/* Cart Items */}
-            <div className="flex-1 overflow-y-auto p-5 no-scrollbar">
+            <div className="flex-1 overflow-y-auto p-6 no-scrollbar">
               {cart.length === 0 ? (
                 <div className="h-full flex flex-col items-center justify-center text-neutral-400">
-                  <ShoppingCart size={48} className="mb-4 opacity-50" />
-                  <p className="font-medium">Tu carrito está vacío</p>
+                  <ShoppingCart size={40} strokeWidth={1.5} className="mb-4 opacity-40" />
+                  <p className="font-medium text-[14px]">Tu carrito está vacío</p>
                 </div>
               ) : (
-                <div className="flex flex-col gap-5">
+                <div className="flex flex-col gap-6">
                   {cart.map(item => (
-                    <div key={item.id} className="flex gap-3">
-                      <div className="w-[56px] h-[56px] rounded bg-neutral-100 shrink-0 overflow-hidden">
+                    <div key={item.id} className="flex gap-4">
+                      <div className="w-[64px] h-[64px] rounded-sm bg-neutral-50 shrink-0 overflow-hidden border border-neutral-100">
                         {item.image_url ? (
                           <img src={item.image_url} alt={item.name} className="w-full h-full object-cover" />
                         ) : (
@@ -736,17 +745,17 @@ export default function PublicStore() {
                           </div>
                         )}
                       </div>
-                      <div className="flex-1 flex flex-col min-w-0">
-                        <h4 className="font-bold text-[14px] leading-tight mb-1 text-neutral-900 line-clamp-2">{item.name}</h4>
+                      <div className="flex-1 flex flex-col min-w-0 py-0.5">
+                        <h4 className="font-medium text-[13px] leading-snug mb-1 text-neutral-800 line-clamp-2">{item.name}</h4>
                         <div className="flex items-center justify-between mt-auto">
-                          <span className="font-bold text-[13px]" style={{ color: 'var(--theme-primary)' }}>${item.price}</span>
+                          <span className="font-semibold text-[14px]" style={{ color: 'var(--theme-primary)' }}>${item.price}</span>
                           <div className="flex items-center gap-3">
-                            <div className="flex items-center bg-neutral-50 rounded border border-neutral-200">
-                              <button onClick={() => updateCartQuantity(item.id, -1)} className="w-7 h-7 flex items-center justify-center text-neutral-500"><Minus size={12} /></button>
-                              <span className="text-[12px] font-bold w-4 text-center">{item.quantity}</span>
-                              <button onClick={() => updateCartQuantity(item.id, 1)} className="w-7 h-7 flex items-center justify-center text-neutral-500"><Plus size={12} /></button>
+                            <div className="flex items-center bg-white rounded-sm border border-neutral-200 h-[28px]">
+                              <button onClick={() => updateCartQuantity(item.id, -1)} className="w-7 h-full flex items-center justify-center text-neutral-500 hover:bg-neutral-50"><Minus size={12} /></button>
+                              <span className="text-[12px] font-medium w-4 text-center">{item.quantity}</span>
+                              <button onClick={() => updateCartQuantity(item.id, 1)} className="w-7 h-full flex items-center justify-center text-neutral-500 hover:bg-neutral-50"><Plus size={12} /></button>
                             </div>
-                            <button onClick={() => removeFromCart(item.id)} className="text-neutral-400 hover:text-red-500 p-1">
+                            <button onClick={() => removeFromCart(item.id)} className="text-neutral-300 hover:text-red-500 transition-colors p-1">
                               <Trash2 size={16} />
                             </button>
                           </div>
@@ -760,30 +769,30 @@ export default function PublicStore() {
 
             {/* Cart Footer Sticky */}
             {cart.length > 0 && (
-              <div className="p-5 border-t border-neutral-100 bg-white shrink-0 pb-8 md:pb-5">
-                <div className="flex justify-between items-center mb-2">
-                  <span className="font-bold text-neutral-600">Subtotal:</span>
-                  <span className="font-bold text-[16px]">${cartTotal}</span>
+              <div className="p-6 border-t border-neutral-100 bg-white shrink-0 pb-8 md:pb-6 shadow-[0_-4px_20px_rgb(0,0,0,0.02)]">
+                <div className="flex justify-between items-end mb-1">
+                  <span className="text-[13px] font-medium text-neutral-500">Subtotal</span>
+                  <span className="font-semibold text-[18px] text-neutral-900">${cartTotal}</span>
                 </div>
-                <p className="text-[11px] text-neutral-500 mb-4 text-right">Los precios son orientativos. El vendedor confirma por WhatsApp.</p>
+                <p className="text-[11px] text-neutral-400 mb-5 text-right">Precios orientativos. El vendedor confirmará por WhatsApp.</p>
                 
                 {store.whatsapp_number ? (
                   <button 
                     onClick={handleWhatsAppCart}
-                    className="w-full h-[52px] rounded-lg font-bold text-white text-[15px] flex items-center justify-center mb-3 transition-transform active:scale-[0.98]"
+                    className="w-full h-[48px] rounded-sm font-semibold tracking-wide text-white text-[14px] flex items-center justify-center mb-4 transition-all hover:opacity-90"
                     style={{ backgroundColor: '#25D366' }}
                   >
-                    💬 Enviar pedido por WhatsApp
+                    Enviar pedido por WhatsApp
                   </button>
                 ) : (
-                  <div className="w-full h-[52px] rounded-lg bg-neutral-100 text-neutral-500 flex items-center justify-center font-medium text-[13px] mb-3">
-                    El vendedor no configuró WhatsApp aún.
+                  <div className="w-full h-[48px] rounded-sm bg-neutral-50 text-neutral-400 flex items-center justify-center font-medium text-[13px] mb-4 border border-neutral-100">
+                    WhatsApp no configurado
                   </div>
                 )}
                 
                 <button 
                   onClick={() => setIsCartOpen(false)}
-                  className="w-full py-2 font-medium text-[14px]"
+                  className="w-full py-2 font-medium text-[13px] hover:underline"
                   style={{ color: 'var(--theme-primary)' }}
                 >
                   Seguir comprando

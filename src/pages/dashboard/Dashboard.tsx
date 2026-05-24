@@ -58,21 +58,21 @@ export default function Dashboard() {
       </div>
       
       {!store ? (
-        <div className="bg-[var(--surface-1)] tactile-card p-8 text-center">
+        <div className="bg-white border border-neutral-200 rounded-lg shadow-sm p-8 text-center">
           <h2 className="text-xl font-bold mb-2">¡Bienvenido a Morshop!</h2>
           <p className="text-[var(--text-secondary)] mb-6">Parece que todavía no configuraste tu tienda.</p>
-          <Link to="/dashboard/store" className="bg-[var(--brand-primary)] text-white px-6 py-2.5 tactile-btn font-bold inline-block">
+          <Link to="/dashboard/store" className="bg-[var(--brand-primary)] text-white px-6 py-2.5 rounded-md font-medium transition-colors hover:bg-blue-700 inline-block">
             Crear mi tienda ahora
           </Link>
         </div>
       ) : (
         <div className="space-y-6">
           {/* Quick Link Card */}
-          <div className="bg-[var(--surface-1)] tactile-card p-5 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+          <div className="bg-white border border-neutral-200 rounded-lg shadow-sm p-6 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
             <div>
-              <h3 className="font-bold text-[var(--text-primary)] text-[15px] mb-1">Tu tienda pública</h3>
-              <div className="flex items-center gap-2 text-sm text-[var(--text-secondary)]">
-                <a href={`/tienda/${store.slug}`} target="_blank" rel="noreferrer" className="text-[var(--brand-primary)] font-medium hover:underline flex items-center gap-1.5">
+              <h3 className="font-semibold text-neutral-900 text-[16px] mb-1.5">Tu tienda pública</h3>
+              <div className="flex items-center gap-2 text-sm text-neutral-500">
+                <a href={`/tienda/${store.slug}`} target="_blank" rel="noreferrer" className="text-blue-600 font-medium hover:underline flex items-center gap-1.5">
                   {window.location.host}/tienda/{store.slug}
                   <ExternalLink size={14} />
                 </a>
@@ -80,10 +80,10 @@ export default function Dashboard() {
             </div>
             <button 
               onClick={handleCopyLink}
-              className={`flex items-center gap-2 px-4 py-2 tactile-btn text-sm font-bold transition-all ${
+              className={`flex items-center gap-2 px-4 py-2.5 rounded-md text-sm font-medium transition-all ${
                 copied 
-                  ? 'bg-[var(--color-success)] text-white' 
-                  : 'bg-[var(--surface-base)] text-[var(--text-primary)]'
+                  ? 'bg-emerald-50 text-emerald-600 border border-emerald-200' 
+                  : 'bg-white border border-neutral-200 text-neutral-700 hover:bg-neutral-50 shadow-sm'
               }`}
             >
               {copied ? <Check size={16} /> : <Copy size={16} />}
@@ -92,48 +92,48 @@ export default function Dashboard() {
           </div>
 
           {/* Metrics */}
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-            <div className="bg-[var(--surface-1)] tactile-card p-5 flex flex-col relative overflow-hidden">
-              <div className="absolute top-0 right-0 p-5 text-[var(--surface-inset)]">
-                <Package size={64} />
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-5">
+            <div className="bg-white border border-neutral-200 rounded-lg shadow-sm p-6 flex flex-col relative overflow-hidden group hover:border-blue-200 hover:shadow-md transition-all">
+              <div className="absolute top-0 right-0 p-6 text-neutral-100 group-hover:text-blue-50 transition-colors">
+                <Package size={80} />
               </div>
-              <span className="text-sm font-bold text-[var(--text-secondary)] mb-1 z-10 flex items-center gap-1.5"><Package size={16}/> Productos</span>
-              <span className="text-3xl font-bold text-[var(--text-primary)] mb-1 z-10">{stats.products}</span>
-              <span className="text-[13px] text-[var(--text-tertiary)] z-10">en tu tienda</span>
+              <span className="text-sm font-medium text-neutral-500 mb-2 z-10 flex items-center gap-1.5"><Package size={16}/> Productos</span>
+              <span className="text-4xl font-bold text-neutral-900 mb-1 z-10 tracking-tight">{stats.products}</span>
+              <span className="text-[13px] text-neutral-400 z-10 font-medium">en tu catálogo</span>
             </div>
 
-            <div className="bg-[var(--surface-1)] tactile-card p-5 flex flex-col relative overflow-hidden">
-              <div className="absolute top-0 right-0 p-5 opacity-20" style={{ color: 'var(--color-warning)' }}>
-                <Star size={64} />
+            <div className="bg-white border border-neutral-200 rounded-lg shadow-sm p-6 flex flex-col relative overflow-hidden group hover:border-amber-200 hover:shadow-md transition-all">
+              <div className="absolute top-0 right-0 p-6 opacity-10 group-hover:opacity-20 transition-opacity" style={{ color: 'var(--color-warning)' }}>
+                <Star size={80} />
               </div>
-              <span className="text-sm font-bold text-[var(--text-secondary)] mb-1 z-10 flex items-center gap-1.5"><Star size={16} style={{ color: 'var(--color-warning)' }}/> Destacados</span>
-              <span className="text-3xl font-bold text-[var(--text-primary)] mb-1 z-10">{stats.featured}<span className="text-[var(--text-tertiary)] text-xl font-medium">/3</span></span>
-              <span className="text-[13px] text-[var(--text-tertiary)] z-10">destacados</span>
+              <span className="text-sm font-medium text-neutral-500 mb-2 z-10 flex items-center gap-1.5"><Star size={16} style={{ color: 'var(--color-warning)' }}/> Destacados</span>
+              <span className="text-4xl font-bold text-neutral-900 mb-1 z-10 tracking-tight">{stats.featured}<span className="text-neutral-300 text-2xl font-medium">/3</span></span>
+              <span className="text-[13px] text-neutral-400 z-10 font-medium">destacados activos</span>
             </div>
 
-            <div className="bg-[var(--surface-1)] tactile-card p-5 flex flex-col relative overflow-hidden">
-              <div className="absolute top-0 right-0 p-5 text-[var(--surface-inset)]">
-                <Eye size={64} />
+            <div className="bg-white border border-neutral-200 rounded-lg shadow-sm p-6 flex flex-col relative overflow-hidden group hover:border-emerald-200 hover:shadow-md transition-all">
+              <div className="absolute top-0 right-0 p-6 text-neutral-100 group-hover:text-emerald-50 transition-colors">
+                <Eye size={80} />
               </div>
-              <span className="text-sm font-bold text-[var(--text-secondary)] mb-1 z-10 flex items-center gap-1.5"><Eye size={16}/> Estado</span>
-              <span className="text-2xl font-bold text-[var(--text-primary)] mt-1 mb-1.5 z-10">
+              <span className="text-sm font-medium text-neutral-500 mb-2 z-10 flex items-center gap-1.5"><Eye size={16}/> Estado de Tienda</span>
+              <span className="text-2xl font-bold text-neutral-900 mt-2 mb-2.5 z-10 tracking-tight">
                 {store.is_published ? 'Pública' : 'Borrador'}
               </span>
-              <span className={`text-[12px] font-bold inline-flex items-center self-start px-2 py-0.5 rounded z-10 ${
-                store.is_published ? 'bg-emerald-50 text-emerald-700' : 'bg-amber-50 text-amber-600'
+              <span className={`text-[12px] font-semibold inline-flex items-center self-start px-2.5 py-1 rounded-md z-10 ${
+                store.is_published ? 'bg-emerald-50 text-emerald-700 border border-emerald-100' : 'bg-amber-50 text-amber-700 border border-amber-100'
               }`}>
-                {store.is_published ? 'Visible para todos' : 'Oculta'}
+                {store.is_published ? 'Visible para todos' : 'Oculta al público'}
               </span>
             </div>
           </div>
 
-          <div className="bg-[var(--surface-1)] tactile-card p-6">
-            <h3 className="font-bold text-[15px] mb-4 text-[var(--text-primary)]">Acciones rápidas</h3>
+          <div className="bg-white border border-neutral-200 rounded-lg shadow-sm p-6">
+            <h3 className="font-semibold text-[16px] mb-5 text-neutral-900">Acciones rápidas</h3>
             <div className="flex flex-col sm:flex-row gap-3">
-              <Link to="/dashboard/products" className="bg-[var(--brand-dark)] text-white tactile-btn px-5 py-2.5 text-sm font-bold text-center flex-1">
+              <Link to="/dashboard/products" className="bg-neutral-900 hover:bg-black text-white rounded-md px-5 py-2.5 text-sm font-medium text-center flex-1 transition-colors shadow-sm">
                 Gestionar productos
               </Link>
-              <Link to="/dashboard/store" className="bg-[var(--surface-base)] text-[var(--text-primary)] tactile-btn px-5 py-2.5 text-sm font-bold text-center flex-1">
+              <Link to="/dashboard/store" className="bg-white border border-neutral-200 hover:bg-neutral-50 text-neutral-700 rounded-md px-5 py-2.5 text-sm font-medium text-center flex-1 transition-colors shadow-sm">
                 Personalizar diseño
               </Link>
             </div>

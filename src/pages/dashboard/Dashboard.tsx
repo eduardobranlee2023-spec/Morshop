@@ -1,9 +1,26 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useRef } from 'react';
 import { supabase } from '../../lib/supabase';
 import { Link } from 'react-router-dom';
 import { Package, Star, Eye, Copy, Check, ExternalLink, Settings, Plus } from 'lucide-react';
-import CountUp from 'react-countup';
 import { motion } from 'framer-motion';
+
+function AnimatedNumber({ value }: { value: number }) {
+  const [display, setDisplay] = useState(0);
+  const rafRef = useRef<number | null>(null);
+  useEffect(() => {
+    if (value === 0) { setDisplay(0); return; }
+    const duration = 600;
+    const start = performance.now();
+    const tick = (now: number) => {
+      const progress = Math.min((now - start) / duration, 1);
+      setDisplay(Math.round(progress * value));
+      if (progress < 1) rafRef.current = requestAnimationFrame(tick);
+    };
+    rafRef.current = requestAnimationFrame(tick);
+    return () => { if (rafRef.current) cancelAnimationFrame(rafRef.current); };
+  }, [value]);
+  return <>{display}</>;
+}
 
 export default function Dashboard() {
   const [store, setStore] = useState<any>(null);
@@ -120,7 +137,7 @@ export default function Dashboard() {
               </div>
               <p className="text-[var(--text-2)] font-medium mb-1">Total de productos</p>
               <div className="text-4xl font-extrabold text-[var(--text-1)]">
-                <CountUp end={stats.products} duration={0.8} />
+                <AnimatedNumber value={stats.products} />
               </div>
             </motion.div>
 
@@ -133,7 +150,7 @@ export default function Dashboard() {
               </div>
               <p className="text-[var(--text-2)] font-medium mb-1">Destacados activos</p>
               <div className="text-4xl font-extrabold text-[var(--text-1)]">
-                <CountUp end={stats.featured} duration={0.8} /><span className="text-[var(--text-3)] text-2xl">/3</span>
+                <AnimatedNumber value={stats.featured} /><span className="text-[var(--text-3)] text-2xl">/3</span>
               </div>
             </motion.div>
 

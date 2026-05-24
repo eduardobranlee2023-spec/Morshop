@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { supabase } from '../../lib/supabase';
-import { Image as ImageIcon, AlertTriangle, Eye, EyeOff, Palette, Info, MessageCircle, Save } from 'lucide-react';
+import { Image as ImageIcon, AlertTriangle, Eye, EyeOff, Palette, Info, MessageCircle, Save, Megaphone, CreditCard, ImagePlus, Trash2 } from 'lucide-react';
 import { motion } from 'framer-motion';
 
 const FONTS = [
@@ -25,6 +25,7 @@ export default function StoreSettings() {
   });
 
   const [uploadingLogo, setUploadingLogo] = useState(false);
+  const [uploadingBanner, setUploadingBanner] = useState(false);
   const [otherPayment, setOtherPayment] = useState('');
   const [useOtherPayment, setUseOtherPayment] = useState(false);
 
@@ -49,15 +50,23 @@ export default function StoreSettings() {
       try {
         if (data.payment_methods) parsedMethods = typeof data.payment_methods === 'string' ? JSON.parse(data.payment_methods) : data.payment_methods;
       } catch (e) {}
+      
       let parsedBanners: string[] = [];
       try {
-        if (data.banner_url) parsedBanners = data.banner_url.trim().startsWith('[') ? JSON.parse(data.banner_url) : [data.banner_url];
+        if (data.banner_url) {
+          if (data.banner_url.trim().startsWith('[')) {
+            parsedBanners = JSON.parse(data.banner_url);
+          } else {
+            parsedBanners = [data.banner_url];
+          }
+        }
       } catch (e) { parsedBanners = [data.banner_url]; }
       
       setStore({
         ...store, ...data, payment_methods: parsedMethods, banner_urls: parsedBanners,
         catalog_layout: data.catalog_layout || 'grid', font_family: data.font_family || 'Inter',
-        primary_color: data.primary_color || '#1136EE', secondary_color: data.secondary_color || '#ffffff'
+        primary_color: data.primary_color || '#1136EE', secondary_color: data.secondary_color || '#ffffff',
+        announcement_text: data.announcement_text || ''
       });
 
       const customMethod = parsedMethods.find((m: string) => !DEFAULT_METHODS.includes(m));
@@ -84,7 +93,37 @@ export default function StoreSettings() {
     } catch (err: any) { alert(err.message); } finally { setUploading(false); }
   }
 
+  async function handleBannerUpload(event: React.ChangeEvent<HTMLInputElement>) {
+    try {
+      setUploadingBanner(true);
+      if (!event.target.files || event.target.files.length === 0) return;
+      const file = event.target.files[0];
+      const ext = file.name.split('.').pop();
+      const filePath = `${store.id || 'new'}/${Math.random()}.${ext}`;
 
+      const { error } = await supabase.storage.from('banners').upload(filePath, file);
+      if (error) throw error;
+      const { data } = supabase.storage.from('banners').getPublicUrl(filePath);
+      
+      const currentBanners = store.banner_urls || [];
+      setStore({ ...store, banner_urls: [...currentBanners, data.publicUrl] });
+    } catch (err: any) { alert(err.message); } finally { setUploadingBanner(false); }
+  }
+
+  const removeBanner = (index: number) => {
+    const newBanners = [...(store.banner_urls || [])];
+    newBanners.splice(index, 1);
+    setStore({ ...store, banner_urls: newBanners });
+  };
+
+  const handlePaymentToggle = (method: string) => {
+    const methods = store.payment_methods || [];
+    if (methods.includes(method)) {
+      setStore({ ...store, payment_methods: methods.filter((m: string) => m !== method) });
+    } else {
+      setStore({ ...store, payment_methods: [...methods, method] });
+    }
+  };
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -139,7 +178,7 @@ export default function StoreSettings() {
     <form onSubmit={handleSubmit} className="space-y-8 max-w-3xl pb-24 md:pb-12 font-sans">
       <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.4 }}>
         <h1 className="text-3xl font-extrabold text-[var(--text-1)] mb-1 tracking-tight">Mi Tienda</h1>
-        <p className="text-[var(--text-2)] font-medium">Personalizá tu catálogo para que refleje tu marca.</p>
+        <p className="text-[var(--text-2)] font-medium">Personalizá tu catálogo, métodos de pago y diseño visual.</p>
       </motion.div>
       
       {/* 1. VISIBILIDAD */}
@@ -237,41 +276,53 @@ export default function StoreSettings() {
               ))}
             </div>
           </div>
+        </div>
+      </motion.section>
 
-          {/* Live Preview Card */}
-          <div className="mt-8 bg-[var(--surface-1)] border border-[var(--border)] rounded-2xl p-5 md:p-8">
-            <h3 className="text-xs font-bold text-[var(--text-3)] uppercase tracking-wider mb-4 flex items-center gap-2"><Eye size={16}/> Vista Previa en Vivo</h3>
-            <div 
-              className="rounded-xl shadow-[var(--shadow-md)] overflow-hidden border border-[var(--border)] transition-all duration-300"
-              style={{ backgroundColor: store.secondary_color || '#ffffff', fontFamily: store.font_family }}
-            >
-              {/* Fake Header */}
-              <div className="px-6 py-5 flex items-center justify-between border-b border-black/5">
-                <div className="flex items-center gap-3">
-                  {store.logo_url && <img src={store.logo_url} alt="Logo" className="w-8 h-8 rounded-full object-cover border border-black/10" />}
-                  <span className="font-bold text-xl" style={{ color: store.primary_color || '#1136EE' }}>{store.name || 'Mi Tienda'}</span>
-                </div>
-                <button 
-                  type="button" 
-                  className="px-5 py-2.5 rounded-lg font-bold text-white text-sm shadow-sm opacity-90 hover:opacity-100 transition-opacity"
-                  style={{ backgroundColor: store.primary_color || '#1136EE' }}
-                >
-                  Seguir
-                </button>
-              </div>
-              {/* Fake Content */}
-              <div className="p-6">
-                <div className="w-3/4 h-8 rounded-lg mb-4" style={{ backgroundColor: store.primary_color, opacity: 0.1 }} />
-                <div className="w-full h-4 rounded bg-black/5 mb-2" />
-                <div className="w-5/6 h-4 rounded bg-black/5" />
-              </div>
+      {/* 3. BANNERS Y ANUNCIOS */}
+      <motion.section initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.4, delay: 0.3 }} className="bg-white rounded-2xl border border-[var(--border)] shadow-[var(--shadow-sm)] p-6 sm:p-8 space-y-6">
+        <div className="flex items-center gap-3 border-b border-[var(--border)] pb-4 mb-2">
+          <div className="p-2 bg-[var(--surface-1)] rounded-lg text-[var(--brand)]"><Megaphone size={20} /></div>
+          <h2 className="text-lg font-bold text-[var(--text-1)]">Promociones y Banners</h2>
+        </div>
+
+        <div>
+          <label className="block text-sm font-bold text-[var(--text-1)] mb-1.5">Barra de anuncios superior</label>
+          <input type="text" value={store.announcement_text || ''} onChange={e => setStore({...store, announcement_text: e.target.value})} className="w-full h-[48px] px-4 rounded-xl border border-[var(--border)] bg-[var(--surface-1)] focus:bg-white focus:border-[var(--brand)] outline-none transition-colors text-[var(--text-1)] font-medium" placeholder="Ej: ¡Envío gratis en compras mayores a $50.000!" />
+          <p className="text-xs text-[var(--text-2)] mt-2 font-medium">Este texto aparecerá destacado en la parte más alta de tu tienda.</p>
+        </div>
+
+        <div>
+          <label className="block text-sm font-bold text-[var(--text-1)] mb-3">Banners (Carrusel)</label>
+          <div className="flex flex-col gap-4">
+            <div className="relative w-full md:w-[240px]">
+              <input type="file" accept="image/*" onChange={handleBannerUpload} className="absolute inset-0 w-full h-full opacity-0 cursor-pointer" disabled={uploadingBanner} />
+              <button type="button" className="w-full h-[44px] bg-white border border-[var(--border-strong)] hover:bg-[var(--surface-1)] rounded-xl text-[var(--text-1)] font-bold text-sm shadow-sm transition-colors flex items-center justify-center gap-2">
+                <ImagePlus size={18} />
+                {uploadingBanner ? 'Subiendo...' : 'Añadir banner'}
+              </button>
             </div>
+            
+            {store.banner_urls && store.banner_urls.length > 0 && (
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mt-4">
+                {store.banner_urls.map((url: string, idx: number) => (
+                  <div key={idx} className="relative rounded-xl overflow-hidden border border-[var(--border)] bg-neutral-50 h-[120px] group">
+                    <img src={url} alt={`Banner ${idx}`} className="w-full h-full object-cover" />
+                    <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                      <button type="button" onClick={() => removeBanner(idx)} className="bg-white text-red-600 p-2 rounded-full shadow-lg hover:bg-red-50 hover:scale-110 transition-transform">
+                        <Trash2 size={20} />
+                      </button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
           </div>
         </div>
       </motion.section>
 
-      {/* 3. INFORMACIÓN GENERAL */}
-      <motion.section initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.4, delay: 0.3 }} className="bg-white rounded-2xl border border-[var(--border)] shadow-[var(--shadow-sm)] p-6 sm:p-8 space-y-6">
+      {/* 4. INFORMACIÓN GENERAL */}
+      <motion.section initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.4, delay: 0.4 }} className="bg-white rounded-2xl border border-[var(--border)] shadow-[var(--shadow-sm)] p-6 sm:p-8 space-y-6">
         <div className="flex items-center gap-3 border-b border-[var(--border)] pb-4 mb-2">
           <div className="p-2 bg-[var(--surface-1)] rounded-lg text-[var(--brand)]"><Info size={20} /></div>
           <h2 className="text-lg font-bold text-[var(--text-1)]">Información General</h2>
@@ -300,8 +351,47 @@ export default function StoreSettings() {
         </div>
       </motion.section>
 
-      {/* 4. WHATSAPP Y VENTAS */}
-      <motion.section initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.4, delay: 0.4 }} className="bg-white rounded-2xl border border-[var(--border)] shadow-[var(--shadow-sm)] p-6 sm:p-8 space-y-6">
+      {/* 5. MÉTODOS DE PAGO */}
+      <motion.section initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.4, delay: 0.5 }} className="bg-white rounded-2xl border border-[var(--border)] shadow-[var(--shadow-sm)] p-6 sm:p-8 space-y-6">
+        <div className="flex items-center gap-3 border-b border-[var(--border)] pb-4 mb-2">
+          <div className="p-2 bg-[var(--surface-1)] rounded-lg text-[var(--brand)]"><CreditCard size={20} /></div>
+          <h2 className="text-lg font-bold text-[var(--text-1)]">Métodos de Pago</h2>
+        </div>
+        
+        <div>
+          <label className="block text-sm font-bold text-[var(--text-1)] mb-4">¿Qué métodos aceptás?</label>
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+            {DEFAULT_METHODS.map(method => (
+              <button
+                key={method}
+                type="button"
+                onClick={() => handlePaymentToggle(method)}
+                className={`p-3 rounded-xl border text-sm font-bold transition-all flex flex-col items-center justify-center gap-2 ${
+                  (store.payment_methods || []).includes(method)
+                    ? 'border-[var(--brand)] bg-[var(--brand-light)] text-[var(--brand)] shadow-sm'
+                    : 'border-[var(--border)] bg-[var(--surface-0)] text-[var(--text-2)] hover:border-[var(--border-strong)]'
+                }`}
+              >
+                {method.toLowerCase().includes('efectivo') ? '💵' : method.toLowerCase().includes('mercado') ? '📲' : method.toLowerCase().includes('tarjeta') ? '💳' : '🏦'}
+                <span className="text-center text-xs leading-tight">{method}</span>
+              </button>
+            ))}
+          </div>
+
+          <div className="mt-4">
+            <label className="flex items-center gap-3 cursor-pointer mb-3">
+              <input type="checkbox" checked={useOtherPayment} onChange={e => { setUseOtherPayment(e.target.checked); if(!e.target.checked) setOtherPayment(''); }} className="w-4 h-4 rounded text-[var(--brand)] focus:ring-[var(--brand)]" />
+              <span className="text-sm font-medium text-[var(--text-1)]">Otro método de pago</span>
+            </label>
+            {useOtherPayment && (
+              <input type="text" value={otherPayment} onChange={e => setOtherPayment(e.target.value)} placeholder="Ej: Cuenta DNI, MODO, etc." className="w-full h-[48px] px-4 rounded-xl border border-[var(--border)] bg-[var(--surface-1)] focus:bg-white focus:border-[var(--brand)] outline-none transition-colors text-[var(--text-1)] font-medium" />
+            )}
+          </div>
+        </div>
+      </motion.section>
+
+      {/* 6. WHATSAPP Y VENTAS */}
+      <motion.section initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.4, delay: 0.6 }} className="bg-white rounded-2xl border border-[var(--border)] shadow-[var(--shadow-sm)] p-6 sm:p-8 space-y-6">
         <div className="flex items-center gap-3 border-b border-[var(--border)] pb-4 mb-2">
           <div className="p-2 bg-emerald-50 rounded-lg text-[var(--whatsapp)]"><MessageCircle size={20} /></div>
           <h2 className="text-lg font-bold text-[var(--text-1)]">Ventas por WhatsApp</h2>

@@ -1,0 +1,136 @@
+@import "tailwindcss";
+
+@theme {
+  --color-primary: #171717;
+  --color-secondary: #f5f5f5;
+  --color-accent: #3b82f6;
+}
+
+@layer base {
+  :root {
+    /* Foreground */
+    --text-primary: #171717;
+    --text-secondary: #52525B;
+    --text-tertiary: #A1A1AA;
+    --text-muted: #D4D4D8;
+
+    /* Background */
+    --surface-base: #FAFAFA;
+    --surface-1: #FFFFFF;
+    --surface-2: #F4F4F5;
+    --surface-inset: #F4F4F5;
+
+    /* Border */
+    --border-subtle: #E4E4E7;
+    --border-default: #D4D4D8;
+    --border-strong: #171717;
+
+    /* Brand */
+    --brand-primary: #2563EB;
+    --brand-dark: #1E293B;
+
+    /* Semantic */
+    --color-success: #10B981;
+    --color-warning: #F59E0B;
+    --color-destructive: #EF4444;
+    --color-whatsapp: #25D366;
+
+    /* Control */
+    --control-bg: var(--surface-inset);
+    --control-border: transparent;
+    --control-focus: var(--border-strong);
+  }
+}
+
+body {
+  font-family: 'Inter', system-ui, -apple-system, sans-serif;
+  background-color: var(--surface-base);
+  color: var(--text-primary);
+}
+
+/* Utilities for Tactile borders (Morshop Signature) */
+.tactile-card {
+  border: 1px solid var(--border-subtle);
+  border-bottom: 3px solid var(--border-default);
+  border-radius: 4px;
+}
+
+.tactile-btn {
+  border: 1px solid transparent;
+  border-bottom: 3px solid rgba(0, 0, 0, 0.2);
+  border-radius: 4px;
+}
+.tactile-btn:active {
+  transform: translateY(2px);
+  border-bottom-width: 1px;
+  margin-top: 2px;
+}
+
+/* Form Inputs */
+.morshop-input {
+  background-color: var(--control-bg);
+  border: 1px solid var(--control-border);
+  color: var(--text-primary);
+  border-radius: 4px;
+  transition: all 0.2s;
+}
+.morshop-input:focus {
+  background-color: var(--surface-1);
+  border-color: var(--control-focus);
+  outline: none;
+}
+
+/* Product grid responsive overrides (inline styles have higher specificity) */
+.product-grid-standard {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 12px;
+  padding: 0 12px;
+}
+@media (min-width: 640px) {
+  .product-grid-standard {
+    grid-template-columns: repeat(3, 1fr);
+  }
+}
+@media (min-width: 768px) {
+  .product-grid-standard {
+    gap: 16px;
+    padding: 0 24px;
+  }
+}
+@media (min-width: 1024px) {
+  .product-grid-standard {
+    grid-template-columns: repeat(4, 1fr);
+  }
+}
+
+.product-grid-list {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 12px;
+  padding: 0 12px;
+}
+@media (min-width: 768px) {
+  .product-grid-list {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 16px;
+    padding: 0 24px;
+  }
+}
+@media (min-width: 1024px) {
+  .product-grid-list {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 20px;
+    max-width: 1000px;
+    margin: 0 auto;
+  }
+}
+
+/* Utilities for Hiding scrollbars */
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+.no-scrollbar {
+  -ms-overflow-style: none;  /* IE and Edge */
+  scrollbar-width: none;  /* Firefox */
+}

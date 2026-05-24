@@ -8,37 +8,45 @@
 
 @layer base {
   :root {
-    /* Foreground */
-    --text-primary: #171717;
-    --text-secondary: #52525B;
-    --text-tertiary: #A1A1AA;
-    --text-muted: #D4D4D8;
+    /* Azul Morshop */
+    --brand: #1136EE;
+    --brand-light: #EEF2FF;
+    --brand-dark: #0A25C4;
 
-    /* Background */
-    --surface-base: #FAFAFA;
-    --surface-1: #FFFFFF;
-    --surface-2: #F4F4F5;
-    --surface-inset: #F4F4F5;
+    /* Superficies */
+    --surface-0: #FFFFFF;
+    --surface-1: #F8FAFC;
+    --surface-2: #F1F5F9;
+    --surface-inset: #E2E8F0;
 
-    /* Border */
-    --border-subtle: #E4E4E7;
-    --border-default: #D4D4D8;
-    --border-strong: #171717;
+    /* Texto */
+    --text-1: #0F172A;
+    --text-2: #475569;
+    --text-3: #94A3B8;
 
-    /* Brand */
-    --brand-primary: #2563EB;
-    --brand-dark: #1E293B;
+    /* Bordes */
+    --border: rgba(15, 23, 42, 0.08);
+    --border-strong: rgba(15, 23, 42, 0.16);
 
-    /* Semantic */
-    --color-success: #10B981;
+    /* Éxito / WhatsApp */
+    --green: #22C55E;
+    --whatsapp: #25D366;
+    
+    /* Semantic legacy mapping (para evitar roturas en componentes no reescritos) */
+    --color-success: var(--green);
     --color-warning: #F59E0B;
     --color-destructive: #EF4444;
-    --color-whatsapp: #25D366;
+    --color-whatsapp: var(--whatsapp);
+    --text-primary: var(--text-1);
+    --text-secondary: var(--text-2);
+    --text-tertiary: var(--text-3);
+    --surface-base: var(--surface-0);
+    --border-subtle: var(--border);
 
-    /* Control */
-    --control-bg: var(--surface-inset);
-    --control-border: transparent;
-    --control-focus: var(--border-strong);
+    /* Sombras */
+    --shadow-sm: 0 1px 3px rgba(0,0,0,0.06), 0 1px 2px rgba(0,0,0,0.04);
+    --shadow-md: 0 4px 16px rgba(17,54,238,0.10), 0 1px 4px rgba(0,0,0,0.06);
+    --shadow-lg: 0 20px 60px rgba(17,54,238,0.15), 0 4px 16px rgba(0,0,0,0.08);
   }
 }
 
@@ -139,4 +147,14 @@ body {
   100% {
     transform: translateX(100%);
   }
+}
+
+@keyframes float {
+  0%, 100% { transform: translateY(0px); }
+  50% { transform: translateY(-12px); }
+}
+
+@keyframes pulse-cta {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(255,255,255,0.4); }
+  50% { box-shadow: 0 0 0 12px rgba(255,255,255,0); }
 }

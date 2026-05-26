@@ -1,12 +1,16 @@
 import { useState, useEffect, useRef } from 'react';
 import { supabase } from '../../lib/supabase';
-import { Plus, Trash2, Edit2, Star, X, Upload, ImageIcon, Folder, LayoutGrid, AlertCircle } from 'lucide-react';
+import { Plus, Trash2, Edit2, Star, X, Upload, ImageIcon, Folder, LayoutGrid, AlertCircle, Sparkles } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { Link } from 'react-router-dom';
+import { usePlan } from '../../hooks/usePlan';
 
 export default function Products() {
   const [products, setProducts] = useState<any[]>([]);
   const [store, setStore] = useState<any>(null);
   const [loading, setLoading] = useState(true);
+  const [isUpgradeModalOpen, setIsUpgradeModalOpen] = useState(false);
+  const planStatus = usePlan(store?.id || null);
   const [uploadingImage, setUploadingImage] = useState(false);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isCategoryModalOpen, setIsCategoryModalOpen] = useState(false);
@@ -144,6 +148,14 @@ export default function Products() {
     setIsModalOpen(true);
   }
 
+  const handleNewProductClick = () => {
+    if (!planStatus.canAddProduct) {
+      setIsUpgradeModalOpen(true);
+    } else {
+      openNew();
+    }
+  };
+
   const featuredCount = products.filter(p => p.is_featured).length;
 
   if (loading) return (
@@ -168,10 +180,33 @@ export default function Products() {
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-6 mb-8">
         <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.4 }}>
           <h1 className="text-3xl font-extrabold text-[var(--text-1)] mb-1 tracking-tight">Tus Productos</h1>
-          <p className="text-[var(--text-2)] font-medium">
-            {products.length} producto{products.length !== 1 ? 's' : ''} ·{' '}
-            <span className="text-amber-600 font-bold">{featuredCount}/3 destacados</span>
-          </p>
+          <div className="text-[14px] font-medium text-[var(--text-2)] flex items-center flex-wrap gap-1.5">
+            {planStatus.loading ? (
+              <span className="text-neutral-400">Cargando datos del plan...</span>
+            ) : planStatus.isPlus ? (
+              <span className="text-amber-600 font-bold flex items-center gap-1">
+                ✨ Plus · Productos ilimitados
+              </span>
+            ) : (
+              <>
+                <span className={
+                  planStatus.productCount >= 15 
+                    ? "text-red-600 font-bold" 
+                    : planStatus.productCount >= 13 
+                    ? "text-amber-600 font-bold" 
+                    : "text-neutral-500"
+                }>
+                  Usando {planStatus.productCount} de 15 productos
+                </span>
+                <span>·</span>
+                <Link to="/dashboard/plus" className="text-amber-500 font-bold hover:underline flex items-center gap-1">
+                  ✨ Obtener ilimitados
+                </Link>
+              </>
+            )}
+            <span className="text-[var(--text-3)] font-normal ml-1">·</span>
+            <span className="text-amber-600 font-bold ml-1">{featuredCount}/3 destacados</span>
+          </div>
         </motion.div>
         <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.4, delay: 0.1 }} className="flex items-center gap-3">
           <button
@@ -182,8 +217,10 @@ export default function Products() {
             Categorías
           </button>
           <button
-            onClick={openNew}
-            className="flex items-center gap-2 px-5 h-[48px] rounded-xl font-bold text-sm text-white bg-[var(--brand)] hover:bg-[var(--brand-dark)] shadow-[var(--shadow-sm)] hover:shadow-md transition-all shrink-0 hover:-translate-y-0.5"
+            onClick={handleNewProductClick}
+            className={`flex items-center gap-2 px-5 h-[48px] rounded-xl font-bold text-sm text-white bg-[var(--brand)] hover:bg-[var(--brand-dark)] shadow-[var(--shadow-sm)] hover:shadow-md transition-all shrink-0 hover:-translate-y-0.5 ${
+              !planStatus.canAddProduct ? 'opacity-50 cursor-not-allowed' : ''
+            }`}
           >
             <Plus size={18} />
             Nuevo producto
@@ -201,7 +238,7 @@ export default function Products() {
               </div>
               <p className="text-lg font-bold text-[var(--text-1)] mb-2">Tu catálogo está vacío</p>
               <p className="text-sm text-[var(--text-2)] mb-6">Empezá a agregar tus productos para que tus clientes puedan comprar.</p>
-              <button onClick={openNew} className="bg-[var(--brand)] text-white font-bold px-6 py-3 rounded-xl w-full">Crear mi primer producto</button>
+              <button onClick={handleNewProductClick} className="bg-[var(--brand)] text-white font-bold px-6 py-3 rounded-xl w-full">Crear mi primer producto</button>
             </div>
           ) : products.map(p => (
             <div key={p.id} className="bg-white border border-[var(--border)] rounded-2xl shadow-[var(--shadow-sm)] flex p-3 cursor-pointer hover:border-[var(--brand)]/30 transition-all group overflow-hidden">
@@ -506,6 +543,71 @@ export default function Products() {
                     Crear
                   </button>
                 </form>
+              </div>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
+      {/* Upgrade Modal */}
+      <AnimatePresence>
+        {isUpgradeModalOpen && (
+          <div className="fixed inset-0 z-[60] flex items-center justify-center p-4">
+            <motion.div 
+              initial={{ opacity: 0 }} 
+              animate={{ opacity: 1 }} 
+              exit={{ opacity: 0 }} 
+              onClick={() => setIsUpgradeModalOpen(false)} 
+              className="absolute inset-0 bg-[var(--text-1)]/45 backdrop-blur-[2px]" 
+            />
+            
+            <motion.div
+              initial={{ opacity: 0, scale: 0.95 }}
+              animate={{ opacity: 1, scale: 1 }}
+              exit={{ opacity: 0, scale: 0.95 }}
+              transition={{ type: "spring", duration: 0.4 }}
+              className="bg-white w-full max-w-[440px] rounded-[24px] p-6 md:p-8 relative z-10 shadow-2xl text-center border border-[var(--border)]"
+              onClick={e => e.stopPropagation()}
+            >
+              <div className="w-14 h-14 bg-amber-50 text-amber-500 rounded-full flex items-center justify-center mx-auto mb-5 border border-amber-100">
+                <Sparkles size={28} className="animate-[pulse_1.5s_infinite]" />
+              </div>
+              <h2 className="text-2xl font-extrabold text-[var(--text-1)] mb-2 tracking-tight">🚀 Alcanzaste el límite</h2>
+              <p className="text-[var(--text-2)] font-medium text-sm mb-6 leading-relaxed">
+                Tu plan gratuito incluye hasta 15 productos. Ya tenés 15/15.
+              </p>
+              
+              <div className="bg-[var(--surface-1)] border border-[var(--border)] rounded-2xl p-5 mb-6 text-left space-y-3">
+                <p className="font-bold text-[var(--text-1)] text-xs uppercase tracking-wider text-[var(--text-3)]">Con Morshop Plus tenés:</p>
+                <div className="space-y-2.5">
+                  <div className="flex items-center gap-2.5 text-sm font-semibold text-neutral-700">
+                    <span className="text-amber-500 text-lg leading-none">✓</span>
+                    <span>Productos ilimitados</span>
+                  </div>
+                  <div className="flex items-center gap-2.5 text-sm font-semibold text-neutral-700">
+                    <span className="text-amber-500 text-lg leading-none">✓</span>
+                    <span>Sin branding de Morshop</span>
+                  </div>
+                  <div className="flex items-center gap-2.5 text-sm font-semibold text-neutral-700">
+                    <span className="text-amber-500 text-lg leading-none">✓</span>
+                    <span>Redes sociales en tu tienda</span>
+                  </div>
+                </div>
+              </div>
+              
+              <div className="flex flex-col sm:flex-row gap-3">
+                <button 
+                  type="button" 
+                  onClick={() => setIsUpgradeModalOpen(false)} 
+                  className="flex-1 h-[46px] bg-white border border-[var(--border-strong)] rounded-xl font-bold text-sm text-[var(--text-2)] hover:bg-[var(--surface-1)] transition-colors active:scale-95"
+                >
+                  Cancelar
+                </button>
+                <Link 
+                  to="/dashboard/plus" 
+                  className="flex-1 h-[46px] rounded-xl font-bold text-sm text-white bg-gradient-to-r from-amber-500 to-orange-500 hover:opacity-95 shadow-md flex items-center justify-center gap-1.5 active:scale-95 transition-all"
+                >
+                  <span>✨ Ver Plan Plus →</span>
+                </Link>
               </div>
             </motion.div>
           </div>

@@ -2,11 +2,112 @@ import { useState, useEffect } from 'react';
 import { Outlet, Link, useLocation, useNavigate } from 'react-router-dom';
 import { supabase } from '../lib/supabase';
 import { LayoutDashboard, Settings, Package, LogOut, Menu, X, Sparkles } from 'lucide-react';
+import { usePlan } from '../hooks/usePlan';
 
 export default function DashboardLayout() {
   const navigate = useNavigate();
   const location = useLocation();
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [store, setStore] = useState<any>(null);
+
+  useEffect(() => {
+    async function loadStore() {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (user) {
+        const { data: storeData } = await supabase
+          .from('stores')
+          .select('id, slug, plan, plan_expires_at')
+          .eq('user_id', user.id)
+          .single();
+        if (storeData) {
+          setStore(storeData);
+        }
+      }
+    }
+    loadStore();
+  }, []);
+
+  const planStatus = usePlan(store?.id || null);
+
+  const renderPlanIndicator = () => {
+    if (planStatus.loading) {
+      return (
+        <div className="pt-6 mt-6 border-t border-[var(--border)] animate-pulse px-3">
+          <div className="h-4 bg-neutral-200 rounded w-24 mb-2"></div>
+          <div className="h-8 bg-neutral-100 rounded w-full"></div>
+        </div>
+      );
+    }
+
+    if (planStatus.isPlus) {
+      const formattedDate = planStatus.planExpiresAt
+        ? new Date(planStatus.planExpiresAt).toLocaleDateString('es-AR', {
+            day: 'numeric',
+            month: 'numeric',
+            year: 'numeric'
+          })
+        : 'Sin límite';
+
+      return (
+        <div className="pt-6 mt-6 border-t border-[var(--border)] px-1">
+          <div className="bg-gradient-to-br from-amber-50 to-orange-50 border border-amber-200/50 rounded-2xl p-4 shadow-sm">
+            <div className="flex items-center gap-2 text-amber-800 font-bold text-sm mb-1">
+              <Sparkles size={16} className="text-amber-500 animate-[pulse_2s_infinite]" />
+              <span>✨ Morshop Plus</span>
+            </div>
+            <p className="text-xs text-amber-700/80 font-medium">
+              Activo hasta {formattedDate}
+            </p>
+          </div>
+        </div>
+      );
+    }
+
+    // Plan Free
+    const percentage = Math.min(100, (planStatus.productCount / 15) * 100);
+    const remaining = Math.max(0, 15 - planStatus.productCount);
+    
+    let barColor = 'bg-[var(--brand)]'; // blue
+    let textColor = 'text-[var(--text-3)]';
+    let warningText = `${planStatus.productCount}/15 prod`;
+
+    if (planStatus.productCount >= 15) {
+      barColor = 'bg-red-500';
+      textColor = 'text-red-600 font-bold';
+      warningText = 'Límite alcanzado';
+    } else if (planStatus.productCount >= 13) {
+      barColor = 'bg-amber-500';
+      textColor = 'text-amber-600 font-bold';
+      warningText = `Te queda${remaining === 1 ? '' : 'n'} ${remaining} prod`;
+    }
+
+    return (
+      <div className="pt-6 mt-6 border-t border-[var(--border)] px-1">
+        <div className="bg-[var(--surface-1)] border border-[var(--border)] rounded-2xl p-4 shadow-sm">
+          <div className="flex items-center justify-between text-xs font-bold text-[var(--text-1)] mb-2">
+            <span>Plan Gratuito</span>
+            <span className={textColor}>{warningText}</span>
+          </div>
+          
+          {/* Progress Bar Container */}
+          <div className="w-full h-2 bg-neutral-200 rounded-full overflow-hidden mb-4">
+            <div 
+              className={`h-full ${barColor} transition-all duration-500 rounded-full`}
+              style={{ width: `${percentage}%` }}
+            />
+          </div>
+
+          <Link
+            to="/dashboard/plus"
+            className="group flex items-center justify-center gap-1.5 h-[36px] w-full rounded-xl text-xs font-bold text-amber-900 bg-gradient-to-r from-amber-100 to-orange-100 hover:from-amber-200 hover:to-orange-200 active:scale-[0.98] transition-all shadow-sm border border-amber-200"
+          >
+            <Sparkles size={13} className="text-amber-700 group-hover:scale-110 transition-transform" />
+            <span>✨ Mejorar a Plus</span>
+          </Link>
+        </div>
+      </div>
+    );
+  };
 
   // Auto-close sidebar when route changes on mobile
   useEffect(() => {
@@ -114,23 +215,7 @@ export default function DashboardLayout() {
             );
           })}
 
-          <div className="pt-6 mt-6 border-t border-[var(--border)]">
-            <Link
-              to="/dashboard/plus"
-              className="relative overflow-hidden group flex items-center justify-between px-3 h-[48px] rounded-xl text-[14px] font-semibold transition-all duration-300 bg-gradient-to-r from-amber-50 to-orange-50 border border-amber-200/50 hover:shadow-[0_4px_12px_rgba(245,158,11,0.1)] hover:border-amber-300 active:scale-[0.98]"
-            >
-              {/* Shimmer effect */}
-              <div className="absolute inset-0 -translate-x-full bg-gradient-to-r from-transparent via-white/50 to-transparent group-hover:animate-[shimmer_1.5s_infinite]" />
-              
-              <div className="flex items-center gap-2 text-amber-800 z-10 relative">
-                <Sparkles size={16} className="text-amber-500 animate-[pulse_2s_ease-in-out_infinite]" />
-                <span className="group-hover:translate-x-0.5 transition-transform duration-200">Plan Plus</span>
-              </div>
-              <span className="z-10 relative text-[10px] uppercase font-bold tracking-wider bg-gradient-to-r from-amber-200 to-orange-200 text-amber-900 px-2 py-1 rounded-md shadow-sm">
-                Pronto
-              </span>
-            </Link>
-          </div>
+          {renderPlanIndicator()}
         </nav>
 
         <div className="p-4 border-t border-[var(--border)] shrink-0">

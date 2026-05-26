@@ -1,7 +1,9 @@
 import { useState, useEffect } from 'react';
 import { supabase } from '../../lib/supabase';
-import { Image as ImageIcon, AlertTriangle, Eye, EyeOff, Palette, Info, MessageCircle, Save, Megaphone, CreditCard, ImagePlus, Trash2 } from 'lucide-react';
+import { Image as ImageIcon, AlertTriangle, Eye, EyeOff, Palette, Info, MessageCircle, Save, Megaphone, CreditCard, ImagePlus, Trash2, Sparkles } from 'lucide-react';
 import { motion } from 'framer-motion';
+import { Link } from 'react-router-dom';
+import { usePlan } from '../../hooks/usePlan';
 
 const FONTS = [
   { id: 'Inter', name: 'Inter (Moderna)' },
@@ -21,8 +23,11 @@ export default function StoreSettings() {
     name: '', slug: '', description: '', primary_color: '#1136EE', secondary_color: '#ffffff',
     whatsapp_number: '', whatsapp_message_template: 'Hola! Me interesa: {{producto}} - ${{precio}}',
     is_published: false, logo_url: '', banner_urls: [], announcement_text: '',
-    font_family: 'Inter', catalog_layout: 'grid', about_text: '', payment_methods: []
+    font_family: 'Inter', catalog_layout: 'grid', about_text: '', payment_methods: [],
+    instagram_url: '', tiktok_url: '', facebook_url: ''
   });
+
+  const planStatus = usePlan(store?.id || null);
 
   const [uploadingLogo, setUploadingLogo] = useState(false);
   const [uploadingBanner, setUploadingBanner] = useState(false);
@@ -66,7 +71,10 @@ export default function StoreSettings() {
         ...store, ...data, payment_methods: parsedMethods, banner_urls: parsedBanners,
         catalog_layout: data.catalog_layout || 'grid', font_family: data.font_family || 'Inter',
         primary_color: data.primary_color || '#1136EE', secondary_color: data.secondary_color || '#ffffff',
-        announcement_text: data.announcement_text || ''
+        announcement_text: data.announcement_text || '',
+        instagram_url: data.instagram_url || '',
+        tiktok_url: data.tiktok_url || '',
+        facebook_url: data.facebook_url || ''
       });
 
       const customMethod = parsedMethods.find((m: string) => !DEFAULT_METHODS.includes(m));
@@ -143,6 +151,9 @@ export default function StoreSettings() {
       banner_url: store.banner_urls && store.banner_urls.length > 0 ? JSON.stringify(store.banner_urls) : '',
       whatsapp_number: store.whatsapp_number || '', whatsapp_message_template: store.whatsapp_message_template || '',
       is_published: store.is_published, user_id: user.id,
+      instagram_url: store.instagram_url || null,
+      tiktok_url: store.tiktok_url || null,
+      facebook_url: store.facebook_url || null
     };
 
     let saveError: any = null;
@@ -349,6 +360,65 @@ export default function StoreSettings() {
           <label className="block text-sm font-bold text-[var(--text-1)] mb-1.5">Sobre nosotros <span className="font-normal text-[var(--text-3)]">(aparece al final del catálogo)</span></label>
           <textarea value={store.about_text || ''} onChange={e => setStore({...store, about_text: e.target.value})} className="w-full px-4 py-3 min-h-[120px] rounded-xl border border-[var(--border)] bg-[var(--surface-1)] focus:bg-white focus:border-[var(--brand)] outline-none transition-colors text-[var(--text-1)] font-medium resize-y" placeholder="Contá la historia de tu marca..."></textarea>
         </div>
+
+        {/* Redes Sociales (Plan Plus) */}
+        <div className="pt-6 border-t border-[var(--border)] relative">
+          <h3 className="text-[15px] font-bold text-[var(--text-1)] mb-4 flex items-center gap-2">
+            Redes sociales <span className="text-[11px] font-bold uppercase tracking-wider bg-amber-50 text-amber-800 px-2 py-0.5 rounded border border-amber-200">Plan Plus</span>
+          </h3>
+          
+          <div className="grid md:grid-cols-3 gap-4">
+            <div>
+              <label className="block text-xs font-bold text-[var(--text-2)] mb-1.5">Instagram URL</label>
+              <input 
+                type="text" 
+                value={store.instagram_url || ''} 
+                onChange={e => setStore({...store, instagram_url: e.target.value})} 
+                className="w-full h-[44px] px-3.5 rounded-xl border border-[var(--border)] bg-[var(--surface-1)] focus:bg-white focus:border-[var(--brand)] outline-none transition-colors text-[var(--text-1)] font-medium text-sm" 
+                placeholder="https://instagram.com/tu_cuenta"
+                disabled={!planStatus.isPlus}
+              />
+            </div>
+            
+            <div>
+              <label className="block text-xs font-bold text-[var(--text-2)] mb-1.5">TikTok URL</label>
+              <input 
+                type="text" 
+                value={store.tiktok_url || ''} 
+                onChange={e => setStore({...store, tiktok_url: e.target.value})} 
+                className="w-full h-[44px] px-3.5 rounded-xl border border-[var(--border)] bg-[var(--surface-1)] focus:bg-white focus:border-[var(--brand)] outline-none transition-colors text-[var(--text-1)] font-medium text-sm" 
+                placeholder="https://tiktok.com/@tu_cuenta"
+                disabled={!planStatus.isPlus}
+              />
+            </div>
+            
+            <div>
+              <label className="block text-xs font-bold text-[var(--text-2)] mb-1.5">Facebook URL</label>
+              <input 
+                type="text" 
+                value={store.facebook_url || ''} 
+                onChange={e => setStore({...store, facebook_url: e.target.value})} 
+                className="w-full h-[44px] px-3.5 rounded-xl border border-[var(--border)] bg-[var(--surface-1)] focus:bg-white focus:border-[var(--brand)] outline-none transition-colors text-[var(--text-1)] font-medium text-sm" 
+                placeholder="https://facebook.com/tu_pagina"
+                disabled={!planStatus.isPlus}
+              />
+            </div>
+          </div>
+
+          {/* Overlay de Bloqueo si es plan free */}
+          {!planStatus.isPlus && (
+            <div className="absolute inset-0 bg-white/80 backdrop-blur-[1.5px] flex flex-col items-center justify-center z-20 rounded-xl">
+              <div className="bg-white border border-[var(--border)] rounded-2xl p-4 shadow-lg text-center max-w-[280px]">
+                <p className="text-sm font-bold text-[var(--text-1)] mb-2.5 flex items-center justify-center gap-1.5">
+                  <span>🔒</span> Función exclusiva de Morshop Plus
+                </p>
+                <Link to="/dashboard/plus" className="inline-block w-full py-2 bg-gradient-to-r from-amber-500 to-orange-500 hover:opacity-95 text-white rounded-xl text-xs font-extrabold shadow-sm transition-all">
+                  ✨ Mejorar mi plan
+                </Link>
+              </div>
+            </div>
+          )}
+        </div>
       </motion.section>
 
       {/* 5. MÉTODOS DE PAGO */}
@@ -413,6 +483,40 @@ export default function StoreSettings() {
             <span className="text-xs font-mono font-bold bg-[var(--surface-2)] text-[var(--text-2)] px-2.5 py-1 rounded-md border border-[var(--border)]">{`{{precio}}`}</span>
           </div>
         </div>
+      </motion.section>
+
+      {/* 7. BRANDING DE LA PLATAFORMA */}
+      <motion.section initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.4, delay: 0.7 }} className="bg-white rounded-2xl border border-[var(--border)] shadow-[var(--shadow-sm)] p-6 sm:p-8 relative overflow-hidden">
+        <div className="flex items-center gap-3 border-b border-[var(--border)] pb-4 mb-6">
+          <div className="p-2 bg-[var(--surface-1)] rounded-lg text-amber-500"><Sparkles size={20} /></div>
+          <h2 className="text-lg font-bold text-[var(--text-1)]">Branding de la plataforma</h2>
+        </div>
+        
+        <div className="flex flex-col gap-4">
+          <label className="flex items-center justify-between p-4 border border-[var(--border)] rounded-xl cursor-not-allowed">
+            <div>
+              <span className="block font-bold text-[var(--text-1)] mb-0.5">Quitar branding de Morshop</span>
+              <span className="block text-sm text-[var(--text-2)] font-medium">Oculta la leyenda "Creá tu tienda gratis en morshop.com" del footer de tu tienda</span>
+            </div>
+            <div className={`w-12 h-6 rounded-full p-1 transition-colors duration-300 ${planStatus.isPlus ? 'bg-[var(--green)]' : 'bg-[var(--border-strong)]'}`}>
+              <div className={`w-4 h-4 bg-white rounded-full transition-transform duration-300 ${planStatus.isPlus ? 'translate-x-6' : 'translate-x-0'}`}></div>
+            </div>
+          </label>
+        </div>
+
+        {/* Overlay de Bloqueo si es plan free */}
+        {!planStatus.isPlus && (
+          <div className="absolute inset-0 bg-white/80 backdrop-blur-[1.5px] flex flex-col items-center justify-center z-20">
+            <div className="bg-white border border-[var(--border)] rounded-2xl p-4 shadow-lg text-center max-w-[280px]">
+              <p className="text-sm font-bold text-[var(--text-1)] mb-2.5 flex items-center justify-center gap-1.5">
+                <span>🔒</span> Función exclusiva de Morshop Plus
+              </p>
+              <Link to="/dashboard/plus" className="inline-block w-full py-2 bg-gradient-to-r from-amber-50 to-orange-500 hover:opacity-95 text-white rounded-xl text-xs font-extrabold shadow-sm transition-all">
+                ✨ Mejorar mi plan
+              </Link>
+            </div>
+          </div>
+        )}
       </motion.section>
 
       {/* STICKY SAVE BUTTON */}

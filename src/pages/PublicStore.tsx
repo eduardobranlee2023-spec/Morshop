@@ -336,7 +336,9 @@ export default function PublicStore() {
       {/* Footer Público */}
       <footer className="bg-[#F8FAFC] py-8 text-center mt-auto border-t border-[var(--border)]">
         <p className="font-bold text-[14px] text-[var(--text-1)] mb-1">{store.name}</p>
-        <p className="text-[12px] text-[var(--text-3)] font-medium">Creá tu tienda gratis en <a href="/" className="underline text-[var(--brand)] hover:text-[var(--brand-dark)]">morshop.com</a></p>
+        {store.plan !== 'plus' && (
+          <p className="text-[12px] text-[var(--text-3)] font-medium">Creá tu tienda gratis en <a href="https://morshop.vercel.app" className="underline text-[var(--brand)] hover:text-[var(--brand-dark)]">morshop.com</a></p>
+        )}
       </footer>
 
       {/* Modal de Producto REDISEÑADO */}

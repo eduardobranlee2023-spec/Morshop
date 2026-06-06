@@ -61,3 +61,29 @@ CREATE OR REPLACE FUNCTION get_product_count(p_store_id uuid)
 RETURNS integer AS $$
   SELECT COUNT(*)::integer FROM products WHERE store_id = p_store_id;
 $$ LANGUAGE sql SECURITY DEFINER;
+
+-- 8. Tabla waitlist — captura de emails interesados en Plus (antes de Mercado Pago)
+CREATE TABLE IF NOT EXISTS waitlist (
+  id uuid DEFAULT gen_random_uuid() PRIMARY KEY,
+  email text NOT NULL,
+  store_id uuid REFERENCES stores(id) ON DELETE SET NULL,
+  created_at timestamptz DEFAULT now()
+);
+
+-- Índice para evitar emails duplicados por tienda
+CREATE UNIQUE INDEX IF NOT EXISTS idx_waitlist_email_store ON waitlist(email, store_id);
+
+-- RLS para waitlist
+ALTER TABLE waitlist ENABLE ROW LEVEL SECURITY;
+
+CREATE POLICY "Anyone can insert to waitlist"
+ON waitlist FOR INSERT
+WITH CHECK (true);
+
+CREATE POLICY "Users can view own waitlist entries"
+ON waitlist FOR SELECT
+USING (
+  store_id IN (
+    SELECT id FROM stores WHERE user_id = auth.uid()
+  )
+);

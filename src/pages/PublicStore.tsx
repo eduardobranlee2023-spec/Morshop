@@ -2,6 +2,22 @@ import { useEffect, useRef, useState } from 'react';
 import { useParams } from 'react-router-dom';
 import { supabase } from '../lib/supabase';
 import { X, ImageIcon, ShoppingCart, Minus, Plus, Trash2, ChevronDown, ChevronUp, MessageCircle } from 'lucide-react';
+import { motion, AnimatePresence, type Variants } from 'framer-motion';
+import { getContrastColor } from '../utils/color';
+
+function useMediaQuery(query: string) {
+  const [matches, setMatches] = useState(false);
+  useEffect(() => {
+    const media = window.matchMedia(query);
+    if (media.matches !== matches) {
+      setMatches(media.matches);
+    }
+    const listener = () => setMatches(media.matches);
+    media.addListener(listener);
+    return () => media.removeListener(listener);
+  }, [matches, query]);
+  return matches;
+}
 
 function AutoplayBanner({ count, activeIndex, setActiveIndex }: { count: number; activeIndex: number; setActiveIndex: (i: number) => void; }) {
   const indexRef = useRef(activeIndex);
@@ -35,6 +51,8 @@ export default function PublicStore() {
   const [addedMessageId, setAddedMessageId] = useState<string | null>(null);
   const [activeBannerIndex, setActiveBannerIndex] = useState(0);
   const bannerScrollRef = useRef<HTMLDivElement>(null);
+  
+  const isDesktop = useMediaQuery('(min-width: 768px)');
 
   useEffect(() => {
     async function fetchStore() {
@@ -82,6 +100,12 @@ export default function PublicStore() {
 
   useEffect(() => { if (selectedProduct) setModalQuantity(1); }, [selectedProduct]);
 
+  useEffect(() => {
+    if (store?.id) {
+      supabase.from('store_views').insert({ store_id: store.id }).then(() => {});
+    }
+  }, [store?.id]);
+
   if (loading) return <div className="min-h-screen flex items-center justify-center font-sans">Cargando tienda...</div>;
   if (!store) return (
     <div className="min-h-screen flex flex-col items-center justify-center bg-neutral-50 p-4 font-sans">
@@ -92,6 +116,9 @@ export default function PublicStore() {
 
   const handleWhatsAppProduct = (product: any, qty: number) => {
     if (!store.whatsapp_number || !product.available) return;
+    
+    supabase.from('stores').update({ whatsapp_clicks: (store.whatsapp_clicks || 0) + 1 }).eq('id', store.id).then(() => {});
+
     const template = store.whatsapp_message_template || 'Hola! Me interesa: {{producto}} - ${{precio}}';
     const mensaje = template.replace('{{producto}}', product.name).replace('{{precio}}', product.price);
     const mensajeFinal = `${mensaje}\nCantidad: ${qty}`;
@@ -100,6 +127,9 @@ export default function PublicStore() {
 
   const handleWhatsAppCart = () => {
     if (!store.whatsapp_number || cart.length === 0) return;
+    
+    supabase.from('stores').update({ whatsapp_clicks: (store.whatsapp_clicks || 0) + 1 }).eq('id', store.id).then(() => {});
+
     const items = cart.map(i => `• ${i.name} x${i.quantity} — $${i.price * i.quantity}`).join('\n');
     const total = cart.reduce((acc, i) => acc + (i.price * i.quantity), 0);
     const mensaje = `Hola! Te hago el siguiente pedido:\n\n${items}\n\nTotal: $${total}`;
@@ -116,7 +146,7 @@ export default function PublicStore() {
     });
     if (!selectedProduct) {
       setAddedMessageId(product.id);
-      setTimeout(() => setAddedMessageId(null), 1200);
+      setTimeout(() => setAddedMessageId(null), 1500); // feedback anim
     } else {
       setSelectedProduct(null);
     }
@@ -145,15 +175,29 @@ export default function PublicStore() {
   else if (store.banner_url) {
     try { const parsed = JSON.parse(store.banner_url); bannerUrls = Array.isArray(parsed) ? parsed.filter(Boolean) : [store.banner_url]; } catch { bannerUrls = [store.banner_url]; }
   }
+  
+  const primaryColor = store.primary_color || '#1136EE';
+  const contrastColor = getContrastColor(primaryColor);
+
+  const containerVariants: Variants = {
+    hidden: {},
+    visible: { transition: { staggerChildren: 0.07 } }
+  };
+
+  const cardVariants: Variants = {
+    hidden: { opacity: 0, y: 20 },
+    visible: { opacity: 1, y: 0, transition: { duration: 0.3, ease: 'easeOut' as const } }
+  };
 
   const ProductCard = ({ product }: { product: any }) => {
     const isAdded = addedMessageId === product.id;
     return (
-      <div 
+      <motion.div 
+        whileHover={{ y: -4, boxShadow: '0 8px 24px rgba(0,0,0,0.10)' }}
+        transition={{ duration: 0.18 }}
         onClick={() => setSelectedProduct(product)}
-        className="bg-white rounded-[12px] shadow-[0_2px_8px_rgba(0,0,0,0.08)] md:hover:-translate-y-1 md:hover:shadow-[0_8px_16px_rgba(0,0,0,0.12)] transition-all duration-200 cursor-pointer flex flex-col h-full overflow-hidden"
+        className="bg-white rounded-[12px] shadow-[0_2px_8px_rgba(0,0,0,0.08)] transition-all duration-200 cursor-pointer flex flex-col h-full overflow-hidden"
       >
-        {/* Imagen cuadrada perfecta */}
         <div className="w-full aspect-square bg-neutral-100 relative shrink-0">
           {product.original_price && (
             <div className="absolute top-2 left-2 z-10 bg-black text-white text-[10px] font-bold tracking-wider px-2 py-1 uppercase">
@@ -161,7 +205,7 @@ export default function PublicStore() {
             </div>
           )}
           {product.is_featured && (
-            <div className="absolute top-2 right-2 z-10 bg-[#D4A017] text-white text-[10px] font-bold tracking-wider px-2 py-1 uppercase">
+            <div className="absolute top-2 right-2 z-10 bg-[#D4A017] text-[#1a1a1a] text-[10px] font-bold tracking-wider px-2 py-1 uppercase">
               DESTACADO
             </div>
           )}
@@ -172,7 +216,6 @@ export default function PublicStore() {
           )}
         </div>
         
-        {/* Contenido (Textos) */}
         <div className="p-[10px] flex flex-col flex-1">
           <h3 className="text-[13px] font-bold text-[var(--text-1)] mb-1 line-clamp-2 leading-snug">{product.name}</h3>
           <div className="mt-auto flex flex-col pt-1">
@@ -181,31 +224,53 @@ export default function PublicStore() {
           </div>
         </div>
 
-        {/* Botón anclado abajo */}
         <div className="mt-2 shrink-0">
-          <button
+          <motion.button
+            whileTap={{ scale: 0.96 }}
             onClick={(e) => addToCart(product, 1, e)}
             disabled={!product.available}
-            className="w-full h-[38px] text-[12px] font-bold flex items-center justify-center transition-colors rounded-none"
+            className="w-full h-[38px] text-[12px] font-bold flex items-center justify-center rounded-none"
             style={{ 
-              backgroundColor: product.available ? (isAdded ? '#137333' : 'var(--store-primary)') : '#f5f5f5',
-              color: product.available ? 'white' : '#a3a3a3',
+              backgroundColor: product.available ? (isAdded ? '#137333' : primaryColor) : '#f5f5f5',
+              color: product.available ? (isAdded ? '#ffffff' : contrastColor) : '#a3a3a3',
+              border: 'none',
+              cursor: product.available ? 'pointer' : 'not-allowed'
             }}
           >
             {product.available ? (isAdded ? '✓ Agregado' : 'Agregar al carrito') : 'Sin stock'}
-          </button>
+          </motion.button>
         </div>
-      </div>
+      </motion.div>
     );
   };
 
   return (
     <div style={storeTheme} className="min-h-screen flex flex-col bg-white">
       
-      {/* 1. Announcement Bar */}
+      {/* 1. Announcement Bar con Animación Loop */}
       {store.announcement_text && (
-        <div className="w-full py-1.5 px-4 flex items-center justify-center" style={{ backgroundColor: 'var(--store-primary)' }}>
-          <p className="text-white text-[12px] font-medium truncate">{store.announcement_text}</p>
+        <div style={{ overflow: 'hidden', background: primaryColor, padding: '8px 0', width: '100%' }}>
+          <motion.div
+            style={{ display: 'flex', whiteSpace: 'nowrap', width: 'fit-content' }}
+            animate={{ x: ['0%', '-50%'] }}
+            transition={{ duration: 18, repeat: Infinity, ease: 'linear' }}
+          >
+            {/* Repetir el texto 8 veces para garantizar loop sin espacios vacíos */}
+            {Array(8).fill(store.announcement_text).map((text, i) => (
+              <span
+                key={i}
+                style={{
+                  color: contrastColor,
+                  marginRight: '80px',
+                  fontSize: '13px',
+                  fontWeight: 600,
+                  flexShrink: 0,
+                }}
+              >
+                {text}
+              </span>
+            ))}
+          </motion.div>
         </div>
       )}
 
@@ -216,7 +281,7 @@ export default function PublicStore() {
             {store.logo_url ? (
               <img src={store.logo_url} alt={store.name} className="h-[44px] w-auto object-contain mr-3 shrink-0" />
             ) : (
-              <div className="h-[40px] w-[40px] shrink-0 rounded-full flex items-center justify-center text-white font-bold text-lg mr-3" style={{ backgroundColor: 'var(--store-primary)' }}>
+              <div className="h-[40px] w-[40px] shrink-0 rounded-full flex items-center justify-center font-bold text-lg mr-3" style={{ backgroundColor: primaryColor, color: contrastColor }}>
                 {store.name.charAt(0).toUpperCase()}
               </div>
             )}
@@ -225,9 +290,16 @@ export default function PublicStore() {
           <button onClick={() => setIsCartOpen(true)} className="relative p-2 shrink-0 ml-2 text-[var(--text-1)]">
             <ShoppingCart size={24} />
             {cartCount > 0 && (
-              <div className="absolute top-0 right-0 w-[20px] h-[20px] rounded-full flex items-center justify-center text-[11px] font-bold text-white shadow-sm" style={{ backgroundColor: 'var(--store-primary)' }}>
+              <motion.div 
+                key={cartCount}
+                initial={{ scale: 1.5, opacity: 0 }}
+                animate={{ scale: 1, opacity: 1 }}
+                transition={{ type: 'spring', stiffness: 400, damping: 15 }}
+                className="absolute top-0 right-0 w-[20px] h-[20px] rounded-full flex items-center justify-center text-[11px] font-bold shadow-sm" 
+                style={{ backgroundColor: primaryColor, color: contrastColor }}
+              >
                 {cartCount}
-              </div>
+              </motion.div>
             )}
           </button>
         </div>
@@ -235,11 +307,12 @@ export default function PublicStore() {
 
       {/* Payment Methods */}
       {paymentMethods.length > 0 && (
-        <div className="w-full bg-white border-b border-[var(--border)] py-3 overflow-x-auto no-scrollbar">
-          <div className="flex items-center gap-4 px-4 min-w-max max-w-7xl mx-auto text-[13px] font-medium" style={{ color: 'var(--store-primary)' }}>
+        <div className="w-full bg-white py-3 overflow-x-auto no-scrollbar border-b border-[#f0f0f0]">
+          <div className="payment-bar" style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '0 16px', flexWrap: 'nowrap', minWidth: 'max-content', maxWidth: '80rem', margin: '0 auto' }}>
+            <span className="payment-label" style={{ fontSize: '13px', fontWeight: 600, color: '#4b5563' }}>💳 Aceptamos:</span>
             {paymentMethods.map(pm => (
-              <span key={pm} className="flex items-center bg-opacity-10 px-3 py-1 rounded-full" style={{ backgroundColor: 'var(--store-primary)' }}>
-                {pm.toLowerCase().includes('efectivo') ? '💵' : pm.toLowerCase().includes('mercado') ? '📲' : pm.toLowerCase().includes('tarjeta') ? '💳' : '·'} {pm}
+              <span key={pm} className="payment-chip" style={{ fontSize: '12px', padding: '3px 10px', borderRadius: '20px', border: `1.5px solid ${primaryColor}`, color: primaryColor, background: 'transparent', fontWeight: 600, whiteSpace: 'nowrap' }}>
+                {pm}
               </span>
             ))}
           </div>
@@ -275,8 +348,8 @@ export default function PublicStore() {
           <div className="flex items-center gap-2 px-4 min-w-max max-w-7xl mx-auto">
             <button
               onClick={() => setActiveCategoryId(null)}
-              className="px-5 h-[36px] rounded-full text-[14px] font-bold border transition-colors flex items-center justify-center"
-              style={{ backgroundColor: activeCategoryId === null ? 'var(--store-primary)' : 'transparent', color: activeCategoryId === null ? 'white' : 'var(--store-primary)', borderColor: 'var(--store-primary)' }}
+              className="px-5 h-[36px] rounded-full text-[14px] font-bold border transition-colors flex items-center justify-center shrink-0"
+              style={{ backgroundColor: activeCategoryId === null ? primaryColor : 'transparent', color: activeCategoryId === null ? contrastColor : primaryColor, borderColor: primaryColor }}
             >
               Todos
             </button>
@@ -284,8 +357,8 @@ export default function PublicStore() {
               <button
                 key={cat.id}
                 onClick={() => setActiveCategoryId(cat.id)}
-                className="px-5 h-[36px] rounded-full text-[14px] font-bold border transition-colors flex items-center justify-center"
-                style={{ backgroundColor: activeCategoryId === cat.id ? 'var(--store-primary)' : 'transparent', color: activeCategoryId === cat.id ? 'white' : 'var(--store-primary)', borderColor: 'var(--store-primary)' }}
+                className="px-5 h-[36px] rounded-full text-[14px] font-bold border transition-colors flex items-center justify-center shrink-0"
+                style={{ backgroundColor: activeCategoryId === cat.id ? primaryColor : 'transparent', color: activeCategoryId === cat.id ? contrastColor : primaryColor, borderColor: primaryColor }}
               >
                 {cat.name}
               </button>
@@ -299,13 +372,13 @@ export default function PublicStore() {
         {featuredProducts.length > 0 && activeCategoryId === null && (
           <div className="mt-8 mb-10 px-4 md:px-6 overflow-hidden">
             <h2 className="text-[18px] font-extrabold text-[var(--text-1)] mb-4">⭐ Destacados</h2>
-            <div className="flex overflow-x-auto no-scrollbar gap-4 pb-4 -mx-4 px-4 md:mx-0 md:px-0">
+            <motion.div variants={containerVariants} initial="hidden" animate="visible" className="flex overflow-x-auto no-scrollbar gap-4 pb-4 -mx-4 px-4 md:mx-0 md:px-0">
               {featuredProducts.map(p => (
-                <div key={p.id} className="w-[160px] md:w-[220px] shrink-0">
+                <motion.div key={p.id} variants={cardVariants} className="w-[160px] md:w-[220px] shrink-0">
                   <ProductCard product={p} />
-                </div>
+                </motion.div>
               ))}
-            </div>
+            </motion.div>
           </div>
         )}
 
@@ -315,9 +388,23 @@ export default function PublicStore() {
           {displayedProducts.length === 0 ? (
             <div className="text-center py-16 text-[var(--text-2)] font-medium">No hay productos en esta sección.</div>
           ) : (
-            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-[10px] sm:gap-[12px] lg:gap-[16px]">
-              {displayedProducts.map(p => <ProductCard key={p.id} product={p} />)}
-            </div>
+            <AnimatePresence mode="wait">
+              <motion.div
+                key={activeCategoryId || 'all'}
+                variants={containerVariants}
+                initial="hidden"
+                animate="visible"
+                exit={{ opacity: 0 }}
+                transition={{ duration: 0.2 }}
+                className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-[10px] sm:gap-[12px] lg:gap-[16px]"
+              >
+                {displayedProducts.map(p => (
+                  <motion.div key={p.id} variants={cardVariants}>
+                    <ProductCard product={p} />
+                  </motion.div>
+                ))}
+              </motion.div>
+            </AnimatePresence>
           )}
         </div>
 
@@ -341,76 +428,116 @@ export default function PublicStore() {
         )}
       </footer>
 
-      {/* Modal de Producto REDISEÑADO */}
-      {selectedProduct && (
-        <div className="fixed inset-0 z-50 bg-black/60 flex items-end md:items-center justify-center p-0 md:p-6" onClick={() => setSelectedProduct(null)}>
-          <div 
-            className="bg-white w-full max-w-[480px] rounded-t-[16px] md:rounded-[16px] max-h-[90vh] overflow-y-auto flex flex-col relative animate-in slide-in-from-bottom-10 md:slide-in-from-bottom-0 md:fade-in-100 duration-200"
-            onClick={e => e.stopPropagation()}
+      {/* Modal de Producto (REDISEÑADO + SCROLLABLE + ANIMADO) */}
+      <AnimatePresence>
+        {selectedProduct && (
+          <motion.div 
+            className="modal-container"
+            style={{
+              position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.5)',
+              display: 'flex', alignItems: isDesktop ? 'center' : 'flex-end', justifyContent: 'center', zIndex: 1000
+            }}
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            onClick={() => setSelectedProduct(null)}
           >
-            {/* Botón cerrar siempre visible y pegado */}
-            <button onClick={() => setSelectedProduct(null)} className="absolute top-4 right-4 z-20 w-[40px] h-[40px] bg-white/90 backdrop-blur rounded-full flex items-center justify-center shadow-md text-black"><X size={20} /></button>
-            
-            {/* Imagen full width arriba */}
-            <div className="w-full aspect-square bg-neutral-100 relative shrink-0">
-              {selectedProduct.image_url ? (
-                <img src={selectedProduct.image_url} alt={selectedProduct.name} className="w-full h-full object-cover" />
-              ) : (
-                <div className="w-full h-full flex items-center justify-center text-neutral-300"><ImageIcon size={48} /></div>
-              )}
-            </div>
-
-            {/* Info principal */}
-            <div className="p-5 flex-1 pb-32">
-              <h2 className="text-[20px] font-bold text-[#0F172A] mb-2 leading-tight">{selectedProduct.name}</h2>
-              <div className="flex items-center gap-3 mb-4">
-                <span className="text-[26px] font-bold" style={{ color: 'var(--store-primary)' }}>${selectedProduct.price}</span>
-                {selectedProduct.original_price && <span className="text-[14px] text-neutral-400 line-through">${selectedProduct.original_price}</span>}
-              </div>
-              <span className={`inline-block px-3 py-1 rounded-full text-[12px] font-bold mb-6 ${selectedProduct.available ? 'bg-emerald-50 text-emerald-600' : 'bg-red-50 text-red-600'}`}>
-                {selectedProduct.available ? 'Stock disponible' : 'Sin stock'}
-              </span>
+            <motion.div 
+              className="modal-box"
+              style={{
+                background: 'white', width: '100%', maxWidth: '480px', maxHeight: '90vh',
+                borderRadius: isDesktop ? '16px' : '20px 20px 0 0',
+                display: 'flex', flexDirection: 'column', overflow: 'hidden', position: 'relative'
+              }}
+              initial={isDesktop ? { scale: 0.95, opacity: 0 } : { y: '100%' }}
+              animate={isDesktop ? { scale: 1, opacity: 1 } : { y: 0 }}
+              exit={isDesktop ? { scale: 0.95, opacity: 0 } : { y: '100%' }}
+              transition={isDesktop ? { duration: 0.18 } : { type: 'spring', damping: 28, stiffness: 320 }}
+              onClick={e => e.stopPropagation()}
+            >
+              <button onClick={() => setSelectedProduct(null)} className="absolute top-4 right-4 z-20 w-[40px] h-[40px] bg-white/90 backdrop-blur rounded-full flex items-center justify-center shadow-md text-black hover:bg-white"><X size={20} /></button>
               
-              {selectedProduct.description && (
-                <div>
-                  <h3 className="text-[13px] font-bold uppercase text-neutral-400 mb-2 tracking-wide">Descripción</h3>
-                  <p className="text-[14px] text-[#475569] leading-[1.6] whitespace-pre-wrap">{selectedProduct.description}</p>
-                </div>
-              )}
-            </div>
-
-            {/* Sticky Actions Base */}
-            <div className="fixed md:absolute bottom-0 left-0 right-0 bg-white p-4 border-t border-[var(--border)] shadow-[0_-4px_12px_rgba(0,0,0,0.05)]">
-              <div className="flex gap-3 mb-2">
-                <div className="flex items-center border-2 border-neutral-200 rounded-xl overflow-hidden h-[50px] w-[120px] shrink-0">
-                  <button onClick={() => setModalQuantity(Math.max(1, modalQuantity - 1))} className="flex-1 h-full flex items-center justify-center hover:bg-neutral-50"><Minus size={18} /></button>
-                  <div className="font-bold text-[16px] w-[30px] text-center">{modalQuantity}</div>
-                  <button onClick={() => setModalQuantity(modalQuantity + 1)} className="flex-1 h-full flex items-center justify-center hover:bg-neutral-50"><Plus size={18} /></button>
-                </div>
-                <button 
-                  onClick={() => addToCart(selectedProduct, modalQuantity)}
-                  disabled={!selectedProduct.available}
-                  className="flex-1 h-[50px] rounded-xl font-bold text-white text-[15px] disabled:opacity-50"
-                  style={{ backgroundColor: 'var(--store-primary)' }}
-                >
-                  Agregar al carrito
-                </button>
+              {/* Imagen (Fija arriba) */}
+              <div className="modal-image" style={{ height: '280px', flexShrink: 0, background: '#f5f5f5', overflow: 'hidden' }}>
+                {selectedProduct.image_url ? (
+                  <img src={selectedProduct.image_url} alt={selectedProduct.name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                ) : (
+                  <div className="w-full h-full flex items-center justify-center text-neutral-300"><ImageIcon size={48} /></div>
+                )}
               </div>
-              <button 
-                onClick={() => handleWhatsAppProduct(selectedProduct, modalQuantity)}
-                disabled={!selectedProduct.available}
-                className="w-full h-[50px] rounded-xl font-bold text-white text-[15px] flex items-center justify-center gap-2 disabled:opacity-50"
-                style={{ backgroundColor: '#25D366' }}
-              >
-                <MessageCircle size={20} />
-                Consultar por WhatsApp
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
 
-      {/* Cart Drawer (Se mantiene igual, solo ajusto z-index) */}
+              {/* Contenido scrolleable */}
+              <div className="modal-content" style={{ flex: 1, overflowY: 'auto', padding: '20px 16px', display: 'flex', flexDirection: 'column', gap: '12px', paddingBottom: '24px' }}>
+                <h2 style={{ fontSize: '20px', fontWeight: 700, color: '#0f172a', margin: 0, lineHeight: 1.3 }}>{selectedProduct.name}</h2>
+                
+                <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                  <span style={{ fontSize: '26px', fontWeight: 700, color: primaryColor }}>${selectedProduct.price}</span>
+                  {selectedProduct.original_price && <span style={{ fontSize: '14px', color: '#9ca3af', textDecoration: 'line-through' }}>${selectedProduct.original_price}</span>}
+                </div>
+
+                <span style={{
+                  display: 'inline-block', alignSelf: 'flex-start',
+                  padding: '4px 12px', borderRadius: '9999px', fontSize: '12px', fontWeight: 700,
+                  background: selectedProduct.available ? '#ecfdf5' : '#fef2f2',
+                  color: selectedProduct.available ? '#059669' : '#dc2626'
+                }}>
+                  {selectedProduct.available ? '● Stock disponible' : '✕ Sin stock'}
+                </span>
+
+                {selectedProduct.description && (
+                  <div className="modal-description" style={{ marginTop: '8px' }}>
+                    <p style={{ fontSize: '12px', fontWeight: 700, textTransform: 'uppercase', color: '#9ca3af', marginBottom: '8px', letterSpacing: '0.05em' }}>DESCRIPCIÓN</p>
+                    <p style={{ fontSize: '14px', color: '#475569', lineHeight: 1.6, whiteSpace: 'pre-wrap', margin: 0 }}>{selectedProduct.description}</p>
+                  </div>
+                )}
+
+                {/* Botones — pegados al final dentro del scroll para evitar bugs de height */}
+                <div className="modal-actions" style={{ marginTop: 'auto', paddingTop: '24px' }}>
+                  <div style={{ display: 'flex', gap: '12px', marginBottom: '12px' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', border: '2px solid #e5e7eb', borderRadius: '12px', overflow: 'hidden', height: '50px', width: '120px', flexShrink: 0 }}>
+                      <button onClick={() => setModalQuantity(Math.max(1, modalQuantity - 1))} style={{ flex: 1, height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'transparent' }}><Minus size={18} /></button>
+                      <div style={{ fontWeight: 700, fontSize: '16px', width: '30px', textAlign: 'center' }}>{modalQuantity}</div>
+                      <button onClick={() => setModalQuantity(modalQuantity + 1)} style={{ flex: 1, height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'transparent' }}><Plus size={18} /></button>
+                    </div>
+                    <motion.button 
+                      whileTap={{ scale: 0.96 }}
+                      onClick={(e) => addToCart(selectedProduct, modalQuantity, e)}
+                      disabled={!selectedProduct.available}
+                      style={{ 
+                        flex: 1, height: '50px', borderRadius: '12px', fontWeight: 700, fontSize: '15px', border: 'none',
+                        backgroundColor: selectedProduct.available ? primaryColor : '#f5f5f5',
+                        color: selectedProduct.available ? contrastColor : '#a3a3a3',
+                        opacity: selectedProduct.available ? 1 : 0.5,
+                        cursor: selectedProduct.available ? 'pointer' : 'not-allowed',
+                        display: 'flex', alignItems: 'center', justifyContent: 'center'
+                      }}
+                    >
+                      Agregar al carrito
+                    </motion.button>
+                  </div>
+                  <motion.button 
+                    whileTap={{ scale: 0.96 }}
+                    onClick={() => handleWhatsAppProduct(selectedProduct, modalQuantity)}
+                    disabled={!selectedProduct.available}
+                    style={{
+                      width: '100%', height: '50px', borderRadius: '12px', fontWeight: 700, fontSize: '15px', border: 'none',
+                      backgroundColor: '#25D366', color: 'white',
+                      display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px',
+                      opacity: selectedProduct.available ? 1 : 0.5,
+                      cursor: selectedProduct.available ? 'pointer' : 'not-allowed'
+                    }}
+                  >
+                    <MessageCircle size={20} />
+                    Consultar por WhatsApp
+                  </motion.button>
+                </div>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* Cart Drawer */}
       {isCartOpen && (
         <div className="fixed inset-0 z-[100] flex justify-end bg-black/60 animate-in fade-in" onClick={() => setIsCartOpen(false)}>
           <div className="bg-white w-full md:w-[400px] h-[100vh] flex flex-col animate-in slide-in-from-right" onClick={e => e.stopPropagation()}>
@@ -433,8 +560,8 @@ export default function PublicStore() {
                       </div>
                       <div className="flex-1 flex flex-col">
                         <h4 className="font-bold text-[14px] leading-snug mb-1">{item.name}</h4>
-                        <div className="flex items-end justify-between mt-auto">
-                          <span className="font-bold text-[16px]" style={{ color: 'var(--store-primary)' }}>${item.price}</span>
+                        <div className="flex items-center justify-between mt-auto">
+                          <span className="font-bold text-[16px]" style={{ color: primaryColor }}>${item.price}</span>
                           <div className="flex items-center gap-3">
                             <div className="flex items-center bg-[var(--surface-1)] rounded-lg h-[32px] border border-[var(--border)]">
                               <button onClick={() => updateCartQuantity(item.id, -1)} className="w-8 h-full flex items-center justify-center font-bold">-</button>
@@ -459,7 +586,7 @@ export default function PublicStore() {
                 <button onClick={handleWhatsAppCart} className="w-full h-[56px] rounded-xl font-bold text-white text-[16px] flex items-center justify-center gap-2 mb-3" style={{ backgroundColor: '#25D366' }}>
                   <MessageCircle size={22} /> Enviar pedido por WhatsApp
                 </button>
-                <button onClick={() => setIsCartOpen(false)} className="w-full py-2 font-bold text-[14px]" style={{ color: 'var(--store-primary)' }}>Seguir comprando</button>
+                <button onClick={() => setIsCartOpen(false)} className="w-full py-2 font-bold text-[14px]" style={{ color: primaryColor }}>Seguir comprando</button>
               </div>
             )}
           </div>

@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { Outlet, Link, useLocation, useNavigate } from 'react-router-dom';
 import { supabase } from '../lib/supabase';
-import { LayoutDashboard, Settings, Package, LogOut, Menu, X, Sparkles } from 'lucide-react';
+import { LayoutDashboard, Settings, Package, LogOut, Menu, X, Sparkles, BarChart2 } from 'lucide-react';
 import { usePlan } from '../hooks/usePlan';
 
 export default function DashboardLayout() {
@@ -133,6 +133,7 @@ export default function DashboardLayout() {
     { to: '/dashboard', icon: LayoutDashboard, label: 'Resumen', exact: true },
     { to: '/dashboard/store', icon: Settings, label: 'Mi Tienda' },
     { to: '/dashboard/products', icon: Package, label: 'Productos' },
+    { to: planStatus.isPlus ? '/dashboard/stats' : '/dashboard/plus', icon: BarChart2, label: 'Estadísticas', locked: !planStatus.isPlus }
   ];
 
   return (
@@ -189,27 +190,28 @@ export default function DashboardLayout() {
               : location.pathname.startsWith(item.to);
             return (
               <Link
-                key={item.to}
+                key={item.label}
                 to={item.to}
-                className="group relative flex items-center gap-3 px-3 h-[44px] rounded-xl text-[14px] font-medium transition-all duration-200"
+                className={`group relative flex items-center gap-3 px-3 h-[44px] rounded-xl text-[14px] font-medium transition-all duration-200 ${item.locked ? 'opacity-80' : ''}`}
                 style={{
-                  color: isActive ? 'var(--brand)' : 'var(--text-2)',
-                  backgroundColor: isActive ? 'var(--brand-light)' : 'transparent',
+                  color: isActive && !item.locked ? 'var(--brand)' : 'var(--text-2)',
+                  backgroundColor: isActive && !item.locked ? 'var(--brand-light)' : 'transparent',
                 }}
               >
-                {isActive && (
+                {isActive && !item.locked && (
                   <div className="absolute left-0 top-1/2 -translate-y-1/2 w-[3px] h-5 rounded-r-full" style={{ backgroundColor: 'var(--brand)', boxShadow: '0 0 8px rgba(17,54,238,0.3)' }} />
                 )}
                 
                 <div className={`
                   flex items-center justify-center w-8 h-8 rounded-lg transition-all duration-200
-                  ${isActive ? 'bg-white shadow-sm' : 'group-hover:bg-[var(--surface-2)] group-active:scale-95'}
-                `} style={{ color: isActive ? 'var(--brand)' : undefined }}>
-                  <item.icon size={18} strokeWidth={isActive ? 2.5 : 2} />
+                  ${isActive && !item.locked ? 'bg-white shadow-sm' : 'group-hover:bg-[var(--surface-2)] group-active:scale-95'}
+                `} style={{ color: isActive && !item.locked ? 'var(--brand)' : undefined }}>
+                  <item.icon size={18} strokeWidth={isActive && !item.locked ? 2.5 : 2} />
                 </div>
                 
-                <span className={`transition-transform duration-200 ${isActive ? 'translate-x-0.5 font-bold' : 'group-hover:translate-x-1'}`}>
+                <span className={`flex-1 flex items-center justify-between transition-transform duration-200 ${isActive && !item.locked ? 'translate-x-0.5 font-bold' : 'group-hover:translate-x-1'}`}>
                   {item.label}
+                  {item.locked && <span title="Disponible en Plan Plus" className="text-[10px]">🔒</span>}
                 </span>
               </Link>
             );

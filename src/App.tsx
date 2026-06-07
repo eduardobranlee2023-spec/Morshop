@@ -14,6 +14,7 @@ import Dashboard from './pages/dashboard/Dashboard';
 import StoreSettings from './pages/dashboard/StoreSettings';
 import Products from './pages/dashboard/Products';
 import PlusPlan from './pages/dashboard/PlusPlan';
+import Stats from './pages/dashboard/Stats';
 import PublicStore from './pages/PublicStore';
 
 function App() {
@@ -50,6 +51,7 @@ function App() {
           <Route path="store" element={<StoreSettings />} />
           <Route path="products" element={<Products />} />
           <Route path="plus" element={<PlusPlan />} />
+          <Route path="stats" element={<Stats />} />
         </Route>
 
         {/* Public Store Route */}

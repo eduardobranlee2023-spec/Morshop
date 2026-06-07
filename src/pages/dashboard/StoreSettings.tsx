@@ -6,11 +6,11 @@ import { Link } from 'react-router-dom';
 import { usePlan } from '../../hooks/usePlan';
 
 const FONTS = [
-  { id: 'Inter', name: 'Inter (Moderna)' },
-  { id: 'Playfair Display', name: 'Playfair (Elegante)' },
-  { id: 'Nunito', name: 'Nunito (Amigable)' },
-  { id: 'Oswald', name: 'Oswald (Llamativa)' },
-  { id: 'Lato', name: 'Lato (Profesional)' },
+  { id: 'Inter', name: 'Inter (Moderna)', free: true },
+  { id: 'Playfair Display', name: 'Playfair (Elegante)', free: false },
+  { id: 'Nunito', name: 'Nunito (Amigable)', free: true },
+  { id: 'Oswald', name: 'Oswald (Llamativa)', free: false },
+  { id: 'Lato', name: 'Lato (Profesional)', free: true },
 ];
 
 const DEFAULT_METHODS = ['Efectivo', 'Transferencia', 'Mercado Pago', 'Débito / Crédito'];
@@ -277,11 +277,20 @@ export default function StoreSettings() {
                 <button
                   key={font.id}
                   type="button"
-                  onClick={() => setStore({...store, font_family: font.id})}
-                  className={`p-4 rounded-xl text-left transition-all border ${store.font_family === font.id ? 'border-[var(--brand)] bg-[var(--brand-light)] shadow-sm' : 'border-[var(--border)] bg-[var(--surface-0)] hover:border-[var(--border-strong)]'}`}
+                  onClick={() => {
+                    if (!font.free && !planStatus.isPlus) {
+                      window.location.href = '/dashboard/plus';
+                      return;
+                    }
+                    setStore({...store, font_family: font.id});
+                  }}
+                  className={`relative p-4 rounded-xl text-left transition-all border ${store.font_family === font.id ? 'border-[var(--brand)] bg-[var(--brand-light)] shadow-sm' : 'border-[var(--border)] bg-[var(--surface-0)] hover:border-[var(--border-strong)]'} ${!font.free && !planStatus.isPlus ? 'opacity-80 grayscale cursor-not-allowed' : ''}`}
                   style={{ fontFamily: font.id }}
                 >
-                  <span className="block text-[15px] font-bold text-[var(--text-1)] mb-1">{font.id}</span>
+                  <div className="flex justify-between items-start">
+                    <span className="block text-[15px] font-bold text-[var(--text-1)] mb-1">{font.id}</span>
+                    {!font.free && !planStatus.isPlus && <span className="text-[10px] bg-amber-100 text-amber-800 px-1.5 py-0.5 rounded shadow-sm border border-amber-200">⭐ Plus</span>}
+                  </div>
                   <span className={`block text-xs font-medium ${store.font_family === font.id ? 'text-[var(--brand)]' : 'text-[var(--text-3)]'}`}>Aa Bb Cc</span>
                 </button>
               ))}

@@ -87,3 +87,26 @@ USING (
     SELECT id FROM stores WHERE user_id = auth.uid()
   )
 );
+
+-- 9. Tabla store_views para métricas de visitas
+CREATE TABLE IF NOT EXISTS store_views (
+  id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+  store_id UUID REFERENCES stores(id) ON DELETE CASCADE,
+  viewed_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+CREATE INDEX IF NOT EXISTS idx_store_views_store_id ON store_views(store_id);
+CREATE INDEX IF NOT EXISTS idx_store_views_viewed_at ON store_views(viewed_at);
+
+ALTER TABLE store_views ENABLE ROW LEVEL SECURITY;
+
+CREATE POLICY "owner_sees_own_views" ON store_views
+  FOR SELECT USING (
+    store_id IN (SELECT id FROM stores WHERE user_id = auth.uid())
+  );
+
+CREATE POLICY "anyone_can_insert_view" ON store_views
+  FOR INSERT WITH CHECK (true);
+
+-- 10. Columna whatsapp_clicks en stores
+ALTER TABLE stores ADD COLUMN IF NOT EXISTS whatsapp_clicks INTEGER DEFAULT 0;

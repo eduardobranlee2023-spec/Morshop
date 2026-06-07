@@ -218,15 +218,30 @@ export default function Products() {
           </button>
           <button
             onClick={handleNewProductClick}
-            className={`flex items-center gap-2 px-5 h-[48px] rounded-xl font-bold text-sm text-white bg-[var(--brand)] hover:bg-[var(--brand-dark)] shadow-[var(--shadow-sm)] hover:shadow-md transition-all shrink-0 hover:-translate-y-0.5 ${
-              !planStatus.canAddProduct ? 'opacity-50 cursor-not-allowed' : ''
+            disabled={!planStatus.isPlus && products.length >= 15}
+            className={`flex items-center gap-2 px-5 h-[48px] rounded-xl font-bold text-sm shadow-[var(--shadow-sm)] hover:shadow-md transition-all shrink-0 hover:-translate-y-0.5 ${
+              !planStatus.isPlus && products.length >= 15
+                ? 'bg-neutral-200 text-neutral-500 cursor-not-allowed opacity-80'
+                : 'text-white bg-[var(--brand)] hover:bg-[var(--brand-dark)]'
             }`}
           >
-            <Plus size={18} />
-            Nuevo producto
+            {(!planStatus.isPlus && products.length >= 15) ? '🔒 Límite alcanzado' : <><Plus size={18} /> Nuevo producto</>}
           </button>
         </motion.div>
       </div>
+
+      {/* Banner de límite */}
+      {!planStatus.isPlus && products.length >= 15 && (
+        <motion.div initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }} className="bg-amber-50 border border-amber-200 rounded-xl p-4 mb-8 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+          <div className="flex items-center gap-3">
+            <AlertCircle className="text-amber-500 shrink-0" />
+            <span className="text-amber-900 font-medium">🔒 Llegaste al límite de 15 productos del plan gratuito</span>
+          </div>
+          <Link to="/dashboard/plus" className="shrink-0 bg-amber-500 hover:bg-amber-600 text-white px-4 py-2 rounded-lg font-bold text-sm transition-colors shadow-sm">
+            Ver Plan Plus →
+          </Link>
+        </motion.div>
+      )}
 
       <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.4, delay: 0.2 }}>
         {/* Mobile Cards */}

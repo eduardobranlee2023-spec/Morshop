@@ -16,25 +16,39 @@ export default function Stats() {
 
   useEffect(() => {
     async function loadData() {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) return;
-      
-      const { data: storeData } = await supabase
-        .from('stores')
-        .select('id, whatsapp_clicks, primary_color')
-        .eq('user_id', user.id)
-        .single();
-
-      if (storeData) {
-        setStore(storeData);
-
-        const { count } = await supabase
-          .from('products')
-          .select('*', { count: 'exact', head: true })
-          .eq('store_id', storeData.id)
-          .eq('available', true);
+      try {
+        const { data: { user } } = await supabase.auth.getUser();
+        if (!user) {
+          setLoading(false);
+          return;
+        }
         
-        setProductCount(count || 0);
+        const { data: storeData, error: storeError } = await supabase
+          .from('stores')
+          .select('id, whatsapp_clicks, primary_color')
+          .eq('user_id', user.id)
+          .single();
+
+        if (storeError) {
+          console.error("Error al cargar tienda en Stats (¿Falta correr el SQL?):", storeError.message);
+        }
+
+        if (storeData) {
+          setStore(storeData);
+
+          const { count } = await supabase
+            .from('products')
+            .select('*', { count: 'exact', head: true })
+            .eq('store_id', storeData.id)
+            .eq('available', true);
+          
+          setProductCount(count || 0);
+        } else {
+          setLoading(false); // Failsafe para que no quede cargando infinito
+        }
+      } catch (err) {
+        console.error("Error en loadData:", err);
+        setLoading(false);
       }
     }
     loadData();
@@ -80,6 +94,15 @@ export default function Stats() {
     return (
       <div className="flex justify-center items-center h-40">
         <div className="w-8 h-8 border-4 border-[var(--brand-light)] border-t-[var(--brand)] rounded-full animate-spin" />
+      </div>
+    );
+  }
+
+  if (!store) {
+    return (
+      <div className="text-center py-12 px-4 max-w-md mx-auto">
+        <p className="text-red-500 font-bold mb-2 text-lg">Error cargando estadísticas</p>
+        <p className="text-sm text-[var(--text-2)]">No se pudo cargar la tienda. Es posible que te falte ejecutar el archivo SQL en Supabase (`whatsapp_clicks`).</p>
       </div>
     );
   }

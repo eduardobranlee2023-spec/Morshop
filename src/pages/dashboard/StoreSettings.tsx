@@ -351,13 +351,16 @@ export default function StoreSettings() {
             {store.banner_urls && store.banner_urls.length > 0 && (
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mt-4">
                 {store.banner_urls.map((url: string, idx: number) => (
-                  <div key={idx} className="relative rounded-xl overflow-hidden border border-[var(--border)] bg-neutral-50 h-[120px] group">
+                  <div key={idx} className="relative rounded-xl overflow-hidden border border-[var(--border)] bg-neutral-50 h-[120px]">
                     <img src={url} alt={`Banner ${idx}`} className="w-full h-full object-cover" />
-                    <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
-                      <button type="button" onClick={() => removeBanner(idx)} className="bg-white text-red-600 p-2 rounded-full shadow-lg hover:bg-red-50 hover:scale-110 transition-transform">
-                        <Trash2 size={20} />
-                      </button>
-                    </div>
+                    <button 
+                      type="button" 
+                      onClick={() => removeBanner(idx)} 
+                      className="absolute top-2 right-2 w-8 h-8 rounded-full bg-black/60 text-white flex items-center justify-center z-10 hover:bg-red-600 transition-colors shadow-sm"
+                      title="Eliminar banner"
+                    >
+                      <Trash2 size={16} />
+                    </button>
                   </div>
                 ))}
               </div>

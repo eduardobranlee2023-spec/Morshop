@@ -132,7 +132,7 @@ export default function DashboardLayout() {
     navigate('/');
   };
 
-  const navItems = [
+  const navItems: Array<{ to: string; icon: any; label: string; exact?: boolean; locked?: boolean }> = [
     { to: '/dashboard', icon: LayoutDashboard, label: 'Resumen', exact: true },
     { to: '/dashboard/store', icon: Settings, label: 'Mi Tienda' },
     { to: '/dashboard/products', icon: Package, label: 'Productos' },

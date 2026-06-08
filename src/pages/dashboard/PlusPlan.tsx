@@ -9,7 +9,6 @@ import {
   Sparkles,
   Clock,
   ChevronDown,
-  Mail,
   Shield,
   Zap,
   Star,

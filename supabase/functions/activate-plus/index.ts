@@ -59,29 +59,33 @@ serve(async (req) => {
       .eq('id', store_id);
     if (storeError) throw storeError;
 
-    // Enviar email de confirmación
-    await sendEmail({
-      to: user_email,
-      subject: '¡Tu Plan Plus está activo! — Morshop',
-      html: `
-        <h2>¡Hola, ${store_name}!</h2>
-        <p>✅ Confirmamos tu pago y tu <strong>Plan Plus ya está activo</strong>.</p>
-        <p>Tu plan vence el: <strong>${expiresFormatted}</strong></p>
-        <br>
-        <p>A partir de ahora tenés acceso a:</p>
-        <ul>
-          <li>✅ Productos ilimitados</li>
-          <li>✅ Paleta de colores completa</li>
-          <li>✅ Tipografías premium</li>
-          <li>✅ Redes sociales en tu tienda</li>
-          <li>✅ Sin branding de Morshop</li>
-          <li>✅ Estadísticas de tu tienda</li>
-          <li>✅ Formulario de pedido avanzado</li>
-        </ul>
-        <br>
-        <p>— El equipo de Morshop</p>
-      `,
-    });
+    // Enviar email de confirmación (no bloquea la activación si falla)
+    try {
+      await sendEmail({
+        to: user_email,
+        subject: '¡Tu Plan Plus está activo! — Morshop',
+        html: `
+          <h2>¡Hola, ${store_name}!</h2>
+          <p>✅ Confirmamos tu pago y tu <strong>Plan Plus ya está activo</strong>.</p>
+          <p>Tu plan vence el: <strong>${expiresFormatted}</strong></p>
+          <br>
+          <p>A partir de ahora tenés acceso a:</p>
+          <ul>
+            <li>✅ Productos ilimitados</li>
+            <li>✅ Paleta de colores completa</li>
+            <li>✅ Tipografías premium</li>
+            <li>✅ Redes sociales en tu tienda</li>
+            <li>✅ Sin branding de Morshop</li>
+            <li>✅ Estadísticas de tu tienda</li>
+            <li>✅ Formulario de pedido avanzado</li>
+          </ul>
+          <br>
+          <p>— El equipo de Morshop</p>
+        `,
+      });
+    } catch (emailErr) {
+      console.error('Email failed (non-fatal):', emailErr);
+    }
 
     return new Response(JSON.stringify({ ok: true }), {
       headers: { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' },

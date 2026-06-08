@@ -42,17 +42,22 @@ serve(async (req) => {
       .eq('id', payment_request_id);
     if (prError) throw prError;
 
-    await sendEmail({
-      to: user_email,
-      subject: 'Sobre tu pago — Morshop Plus',
-      html: `
-        <h2>Hola, ${store_name}</h2>
-        <p>No pudimos confirmar tu pago de $18.900.</p>
-        <p>Si creés que es un error, respondé este mail con el comprobante y lo revisamos.</p>
-        <br>
-        <p>— El equipo de Morshop</p>
-      `,
-    });
+    // Enviar email (no bloquea el rechazo si falla)
+    try {
+      await sendEmail({
+        to: user_email,
+        subject: 'Sobre tu pago — Morshop Plus',
+        html: `
+          <h2>Hola, ${store_name}</h2>
+          <p>No pudimos confirmar tu pago de $18.900.</p>
+          <p>Si creés que es un error, respondé este mail con el comprobante y lo revisamos.</p>
+          <br>
+          <p>— El equipo de Morshop</p>
+        `,
+      });
+    } catch (emailErr) {
+      console.error('Email failed (non-fatal):', emailErr);
+    }
 
     return new Response(JSON.stringify({ ok: true }), {
       headers: { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' },

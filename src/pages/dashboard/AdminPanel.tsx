@@ -174,6 +174,7 @@ export default function AdminPanel() {
                       <td className="py-3 px-2 flex gap-2">
                         <button onClick={() => handleActivate(req)} className="bg-green-100 text-green-700 font-bold px-3 py-1 rounded-lg hover:bg-green-200">✅ Activar</button>
                         <button onClick={() => handleReject(req)} className="bg-red-100 text-red-700 font-bold px-3 py-1 rounded-lg hover:bg-red-200">🔴 Rechazar</button>
+                        <a href={`mailto:${req.user_email}?subject=Sobre tu pago — Morshop Plus&body=Hola ${req.store_name},%0A%0A`} className="bg-blue-100 text-blue-700 font-bold px-3 py-1 rounded-lg hover:bg-blue-200 inline-flex items-center">✉️ Email</a>
                       </td>
                     </tr>
                   )

@@ -79,6 +79,35 @@ export default function Dashboard() {
         <h1 className="text-3xl font-extrabold text-[var(--text-1)] mb-1 tracking-tight">Resumen de tu tienda</h1>
         <p className="text-[var(--text-2)] font-medium">Monitoreá el estado y las métricas de tu catálogo.</p>
       </motion.div>
+
+      {store && store.plan_expires_at && (() => {
+        const daysLeft = Math.ceil((new Date(store.plan_expires_at).getTime() - new Date().getTime()) / (1000 * 60 * 60 * 24));
+        
+        if (daysLeft <= 3 && daysLeft >= 0) {
+          return (
+            <div className="bg-yellow-50 border border-yellow-200 text-yellow-800 rounded-xl p-4 font-medium flex items-center gap-3">
+              <span className="text-xl">⚠️</span>
+              <p>
+                Tu Plan Plus vence el {new Date(store.plan_expires_at).toLocaleDateString('es-AR')}. 
+                Mercado Pago renovará automáticamente. Si hay algún problema, <Link to="/dashboard/plus" className="underline font-bold text-yellow-900">avisanos acá</Link>.
+              </p>
+            </div>
+          );
+        }
+        
+        if (daysLeft < 0) {
+          return (
+            <div className="bg-red-50 border border-red-200 text-red-800 rounded-xl p-4 font-medium flex items-center gap-3">
+              <span className="text-xl">🔴</span>
+              <p>
+                Tu Plan Plus venció. Tus funciones Plus están pausadas. <Link to="/dashboard/plus" className="underline font-bold text-red-900">Renovar ahora</Link>
+              </p>
+            </div>
+          );
+        }
+        
+        return null;
+      })()}
       
       {!store ? (
         <motion.div 

@@ -19,36 +19,52 @@ import {
 
 // ─── Types ───────────────────────────────────────────────────────────────────
 
-interface WaitlistModalProps {
+interface PaymentModalProps {
   storeId: string | null;
   onClose: () => void;
 }
 
-// ─── Waitlist Modal ───────────────────────────────────────────────────────────
-
-function WaitlistModal({ storeId, onClose }: WaitlistModalProps) {
-  const [email, setEmail] = useState('');
-  const [status, setStatus] = useState<'idle' | 'loading' | 'success' | 'error'>('idle');
+function PaymentModal({ storeId, onClose }: PaymentModalProps) {
+  const [notified, setNotified] = useState(false);
+  const [loading, setLoading] = useState(false);
   const [errorMsg, setErrorMsg] = useState('');
 
-  const handleSubmit = async () => {
-    if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
-      setErrorMsg('Por favor ingresá un email válido.');
-      return;
-    }
+  const MP_SUBSCRIPTION_LINK = 'https://www.mercadopago.com.ar/subscriptions/checkout?preapproval_plan_id=02f92afbfec44ee09976d86a16301ae5';
+
+  const handleNotifyPayment = async () => {
+    setLoading(true);
     setErrorMsg('');
-    setStatus('loading');
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) throw new Error("No autenticado");
 
-    const { error } = await supabase.from('waitlist').insert({
-      email,
-      store_id: storeId || null,
-    });
+      const { data: storeData, error: storeError } = await supabase.from('stores').select('name').eq('id', storeId).single();
+      if (storeError || !storeData) throw new Error("Tienda no encontrada");
 
-    if (error) {
-      console.error('Waitlist error:', error);
-      setStatus('error');
-    } else {
-      setStatus('success');
+      const { error } = await supabase
+        .from('payment_requests')
+        .insert({
+          store_id: storeId,
+          user_id: user.id,
+          store_name: storeData.name,
+          user_email: user.email,
+          amount: 18900,
+          status: 'pending',
+        });
+
+      if (error) throw error;
+
+      // Llamar Edge Function para enviar email de confirmación al vendedor
+      await supabase.functions.invoke('send-payment-notice', {
+        body: { email: user.email, store_name: storeData.name },
+      });
+      
+      setNotified(true);
+    } catch (err: any) {
+      console.error(err);
+      setErrorMsg(err.message || "Ocurrió un error al enviar el aviso.");
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -65,7 +81,7 @@ function WaitlistModal({ storeId, onClose }: WaitlistModalProps) {
         justifyContent: 'center',
         padding: '16px',
       }}
-      onClick={(e) => { if (e.target === e.currentTarget) onClose(); }}
+      onClick={(e) => { if (e.target === e.currentTarget && !loading) onClose(); }}
     >
       <div
         style={{
@@ -73,114 +89,83 @@ function WaitlistModal({ storeId, onClose }: WaitlistModalProps) {
           borderRadius: '20px',
           padding: '32px 28px',
           width: '100%',
-          maxWidth: '420px',
+          maxWidth: '480px',
           boxShadow: '0 24px 60px rgba(0,0,0,0.18)',
           animation: 'modalIn 0.25s cubic-bezier(0.34,1.56,0.64,1) forwards',
         }}
       >
-        {status === 'success' ? (
-          <div style={{ textAlign: 'center', padding: '8px 0' }}>
-            <div style={{
-              width: '72px', height: '72px',
-              background: 'linear-gradient(135deg, #22c55e, #16a34a)',
-              borderRadius: '50%',
-              display: 'flex', alignItems: 'center', justifyContent: 'center',
-              margin: '0 auto 20px',
-              fontSize: '32px',
-            }}>🎉</div>
-            <h3 style={{ fontSize: '22px', fontWeight: 800, color: '#111', margin: '0 0 8px' }}>
-              ¡Listo!
-            </h3>
-            <p style={{ color: '#6b7280', fontSize: '15px', margin: '0 0 24px' }}>
-              Te avisamos en cuanto Mercado Pago esté integrado. 🚀
-            </p>
-            <button
-              onClick={onClose}
-              style={{
-                background: '#111', color: '#fff', border: 'none',
-                borderRadius: '12px', padding: '12px 28px',
-                fontSize: '15px', fontWeight: 700, cursor: 'pointer',
-              }}
-            >
-              Cerrar
-            </button>
+        <div style={{ textAlign: 'center', marginBottom: '24px' }}>
+          <h2 style={{ fontSize: '24px', fontWeight: 800, color: '#111', margin: '0 0 8px' }}>
+            ⭐ Plan Plus — $18.900/mes
+          </h2>
+          <p style={{ color: '#6b7280', fontSize: '15px', margin: 0 }}>
+            Cobro automático mensual por Mercado Pago. Cancelás cuando querés.
+          </p>
+        </div>
+
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
+          {/* Paso 1 */}
+          <div style={{ display: 'flex', gap: '16px' }}>
+            <span style={{
+              width: '32px', height: '32px', borderRadius: '50%', background: '#1136EE', color: '#fff',
+              display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 'bold', flexShrink: 0
+            }}>1</span>
+            <div>
+              <p style={{ margin: '0 0 4px', fontWeight: 'bold', color: '#111' }}>Suscribite en Mercado Pago</p>
+              <p style={{ fontSize: '13px', color: '#6b7280', margin: '0 0 12px' }}>
+                Se abre MP con el plan ya cargado. Elegís tu medio de pago y listo.
+              </p>
+              <button
+                onClick={() => window.open(MP_SUBSCRIPTION_LINK, '_blank')}
+                style={{
+                  background: '#009ee3', color: '#fff', border: 'none', borderRadius: '10px',
+                  padding: '12px 20px', fontSize: '14px', fontWeight: 'bold', cursor: 'pointer',
+                  width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px'
+                }}
+              >
+                💳 Suscribirme con Mercado Pago
+              </button>
+            </div>
           </div>
-        ) : (
-          <>
-            <div style={{ textAlign: 'center', marginBottom: '24px' }}>
-              <div style={{ fontSize: '36px', marginBottom: '12px' }}>💳</div>
-              <h3 style={{ fontSize: '22px', fontWeight: 800, color: '#111', margin: '0 0 8px' }}>
-                Pagos en camino
-              </h3>
-              <p style={{ color: '#6b7280', fontSize: '15px', margin: 0, lineHeight: 1.5 }}>
-                Estamos integrando Mercado Pago. Dejá tu email y te avisamos cuando esté listo.
+
+          <div style={{ height: '1px', background: '#f3f4f6' }} />
+
+          {/* Paso 2 */}
+          <div style={{ display: 'flex', gap: '16px' }}>
+            <span style={{
+              width: '32px', height: '32px', borderRadius: '50%', background: '#1136EE', color: '#fff',
+              display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 'bold', flexShrink: 0
+            }}>2</span>
+            <div>
+              <p style={{ margin: '0 0 4px', fontWeight: 'bold', color: '#111' }}>Avisanos que pagaste</p>
+              <p style={{ fontSize: '13px', color: '#6b7280', margin: '0 0 12px' }}>
+                En pocas horas activamos tu plan y te avisamos por email.
               </p>
+              <button
+                onClick={handleNotifyPayment}
+                disabled={notified || loading}
+                style={{
+                  background: notified ? '#10b981' : '#111', color: '#fff', border: 'none', borderRadius: '10px',
+                  padding: '12px 20px', fontSize: '14px', fontWeight: 'bold',
+                  cursor: (notified || loading) ? 'not-allowed' : 'pointer',
+                  width: '100%', opacity: loading ? 0.7 : 1
+                }}
+              >
+                {loading ? 'Enviando...' : notified ? '✓ Aviso enviado' : 'Ya pagué, activar mi Plus'}
+              </button>
+              {errorMsg && <p style={{ color: '#ef4444', fontSize: '13px', marginTop: '8px', marginBottom: 0 }}>{errorMsg}</p>}
             </div>
+          </div>
+        </div>
 
-            <div style={{ marginBottom: '16px' }}>
-              <div style={{
-                display: 'flex', alignItems: 'center', gap: '10px',
-                border: '2px solid #e5e7eb', borderRadius: '12px',
-                padding: '0 14px', background: '#fafafa',
-                transition: 'border-color 0.2s',
-              }}>
-                <Mail size={18} color="#9ca3af" />
-                <input
-                  type="email"
-                  value={email}
-                  onChange={(e) => { setEmail(e.target.value); setErrorMsg(''); }}
-                  placeholder="tu@email.com"
-                  onKeyDown={(e) => e.key === 'Enter' && handleSubmit()}
-                  style={{
-                    flex: 1, border: 'none', background: 'transparent',
-                    padding: '14px 0', fontSize: '15px', outline: 'none',
-                    color: '#111',
-                  }}
-                />
-              </div>
-              {errorMsg && (
-                <p style={{ color: '#ef4444', fontSize: '13px', marginTop: '6px', marginBottom: 0 }}>
-                  {errorMsg}
-                </p>
-              )}
-            </div>
-
-            <button
-              onClick={handleSubmit}
-              disabled={status === 'loading'}
-              style={{
-                width: '100%', background: 'linear-gradient(135deg, #1136EE 0%, #0A25C4 100%)',
-                color: '#fff', border: 'none', borderRadius: '12px',
-                padding: '14px', fontSize: '15px', fontWeight: 700,
-                cursor: status === 'loading' ? 'not-allowed' : 'pointer',
-                opacity: status === 'loading' ? 0.8 : 1,
-                marginBottom: '10px',
-                transition: 'opacity 0.2s, transform 0.15s',
-              }}
-              onMouseEnter={(e) => { if (status !== 'loading') (e.target as HTMLButtonElement).style.transform = 'translateY(-1px)'; }}
-              onMouseLeave={(e) => { (e.target as HTMLButtonElement).style.transform = 'translateY(0)'; }}
-            >
-              {status === 'loading' ? 'Guardando...' : 'Avisame cuando esté listo'}
-            </button>
-
-            {status === 'error' && (
-              <p style={{ color: '#ef4444', fontSize: '13px', textAlign: 'center', marginBottom: '8px' }}>
-                Ocurrió un error. Intentá de nuevo.
-              </p>
-            )}
-
-            <button
-              onClick={onClose}
-              style={{
-                width: '100%', background: 'transparent', color: '#9ca3af',
-                border: 'none', padding: '10px', fontSize: '14px',
-                cursor: 'pointer', fontWeight: 500,
-              }}
-            >
-              Cerrar
-            </button>
-          </>
-        )}
+        <div style={{ marginTop: '24px', textAlign: 'center' }}>
+          <button
+            onClick={onClose}
+            style={{ background: 'transparent', color: '#9ca3af', border: 'none', cursor: 'pointer', fontWeight: 500 }}
+          >
+            Cerrar
+          </button>
+        </div>
       </div>
     </div>
   );
@@ -847,9 +832,9 @@ export default function PlusPlan() {
         </div>
       </div>
 
-      {/* ── WAITLIST MODAL ───────────────────────────────────────────────────── */}
+      {/* ── PAYMENT MODAL ───────────────────────────────────────────────────── */}
       {showModal && (
-        <WaitlistModal storeId={storeId} onClose={() => setShowModal(false)} />
+        <PaymentModal storeId={storeId} onClose={() => setShowModal(false)} />
       )}
     </>
   );

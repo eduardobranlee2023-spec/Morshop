@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { Outlet, Link, useLocation, useNavigate } from 'react-router-dom';
 import { supabase } from '../lib/supabase';
-import { LayoutDashboard, Settings, Package, LogOut, Menu, X, Sparkles, BarChart2 } from 'lucide-react';
+import { LayoutDashboard, Settings, Package, LogOut, Menu, X, Sparkles, BarChart2, Shield } from 'lucide-react';
 import { usePlan } from '../hooks/usePlan';
 
 export default function DashboardLayout() {
@@ -9,11 +9,14 @@ export default function DashboardLayout() {
   const location = useLocation();
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [store, setStore] = useState<any>(null);
+  const [userEmail, setUserEmail] = useState<string | null>(null);
+  const ADMIN_EMAIL = import.meta.env.VITE_ADMIN_EMAIL;
 
   useEffect(() => {
     async function loadStore() {
       const { data: { user } } = await supabase.auth.getUser();
       if (user) {
+        setUserEmail(user.email ?? null);
         const { data: storeData } = await supabase
           .from('stores')
           .select('id, slug, plan, plan_expires_at')
@@ -135,6 +138,10 @@ export default function DashboardLayout() {
     { to: '/dashboard/products', icon: Package, label: 'Productos' },
     { to: planStatus.isPlus ? '/dashboard/stats' : '/dashboard/plus', icon: BarChart2, label: 'Estadísticas', locked: !planStatus.isPlus }
   ];
+
+  if (userEmail && userEmail === ADMIN_EMAIL) {
+    navItems.push({ to: '/dashboard/admin', icon: Shield, label: 'Admin', exact: false, locked: false });
+  }
 
   return (
     <div className="min-h-screen flex bg-[var(--surface-1)]" style={{ fontFamily: 'Inter, system-ui, sans-serif' }}>

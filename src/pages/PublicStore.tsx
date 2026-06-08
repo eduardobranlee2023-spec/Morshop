@@ -479,6 +479,62 @@ ${orderForm.note ? `📝 *Nota:* ${orderForm.note}` : ''}
         )}
       </main>
 
+      {/* Redes sociales — solo si el plan es Plus y hay al menos una red configurada */}
+      {store.plan === 'plus' && 
+       (store.instagram_url || store.tiktok_url || store.facebook_url) && (
+        <div style={{
+          padding: '24px 16px',
+          textAlign: 'center',
+          borderTop: '1px solid #f0f0f0',
+        }}>
+          <p style={{ fontSize: '13px', color: '#888', marginBottom: '12px' }}>
+            Seguinos en redes
+          </p>
+          <div style={{ display: 'flex', justifyContent: 'center', gap: '16px' }}>
+            
+            {store.instagram_url && (
+              <a href={store.instagram_url} target="_blank" rel="noopener noreferrer"
+                style={{
+                  display: 'flex', alignItems: 'center', gap: '6px',
+                  padding: '8px 16px', borderRadius: '20px',
+                  border: '1.5px solid #e5e7eb', color: '#1a1a1a',
+                  textDecoration: 'none', fontSize: '14px', fontWeight: 500,
+                }}
+              >
+                📸 Instagram
+              </a>
+            )}
+
+            {store.tiktok_url && (
+              <a href={store.tiktok_url} target="_blank" rel="noopener noreferrer"
+                style={{
+                  display: 'flex', alignItems: 'center', gap: '6px',
+                  padding: '8px 16px', borderRadius: '20px',
+                  border: '1.5px solid #e5e7eb', color: '#1a1a1a',
+                  textDecoration: 'none', fontSize: '14px', fontWeight: 500,
+                }}
+              >
+                🎵 TikTok
+              </a>
+            )}
+
+            {store.facebook_url && (
+              <a href={store.facebook_url} target="_blank" rel="noopener noreferrer"
+                style={{
+                  display: 'flex', alignItems: 'center', gap: '6px',
+                  padding: '8px 16px', borderRadius: '20px',
+                  border: '1.5px solid #e5e7eb', color: '#1a1a1a',
+                  textDecoration: 'none', fontSize: '14px', fontWeight: 500,
+                }}
+              >
+                👥 Facebook
+              </a>
+            )}
+
+          </div>
+        </div>
+      )}
+
       {/* Footer Público */}
       <footer className="bg-[#F8FAFC] py-8 text-center mt-auto border-t border-[var(--border)]">
         <p className="font-bold text-[14px] text-[var(--text-1)] mb-1">{store.name}</p>

@@ -70,7 +70,7 @@ export default function AdminPanel() {
   const handleActivate = async (req: any) => {
     if (!confirm(`¿Activar plan Plus para ${req.store_name}?`)) return;
     try {
-      await supabase.functions.invoke('activate-plus', {
+      const { data, error } = await supabase.functions.invoke('activate-plus', {
         body: {
           payment_request_id: req.id,
           store_id: req.store_id,
@@ -78,6 +78,10 @@ export default function AdminPanel() {
           store_name: req.store_name
         }
       });
+      if (error) throw error;
+      if (data?.error) throw new Error(data.error);
+      
+      setPendingRequests(prev => prev.filter(p => p.id !== req.id));
       await loadData();
       await loadHistory();
       alert('Plan activado exitosamente.');
@@ -89,13 +93,17 @@ export default function AdminPanel() {
   const handleReject = async (req: any) => {
     if (!confirm(`¿Rechazar pago de ${req.store_name}?`)) return;
     try {
-      await supabase.functions.invoke('reject-payment', {
+      const { data, error } = await supabase.functions.invoke('reject-payment', {
         body: {
           payment_request_id: req.id,
           user_email: req.user_email,
           store_name: req.store_name
         }
       });
+      if (error) throw error;
+      if (data?.error) throw new Error(data.error);
+
+      setPendingRequests(prev => prev.filter(p => p.id !== req.id));
       await loadData();
       await loadHistory();
       alert('Pago rechazado.');

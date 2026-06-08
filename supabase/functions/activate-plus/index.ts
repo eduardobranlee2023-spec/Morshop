@@ -25,13 +25,14 @@ serve(async (req) => {
     const expiresFormatted = expiresAt.toLocaleDateString('es-AR', { day: '2-digit', month: '2-digit', year: 'numeric' });
 
     // Actualizar payment_request
-    await supabase
+    const { error: prError } = await supabase
       .from('payment_requests')
       .update({ status: 'approved' })
       .eq('id', payment_request_id);
+    if (prError) throw prError;
 
     // Activar plan en stores
-    await supabase
+    const { error: storeError } = await supabase
       .from('stores')
       .update({
         plan: 'plus',
@@ -39,6 +40,7 @@ serve(async (req) => {
         plan_expires_at: expiresAt.toISOString(),
       })
       .eq('id', store_id);
+    if (storeError) throw storeError;
 
     // Enviar email de confirmación
     await sendEmail({

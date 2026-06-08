@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { supabase } from '../../lib/supabase';
 import { Image as ImageIcon, AlertTriangle, Eye, EyeOff, Palette, Info, MessageCircle, Save, Megaphone, CreditCard, ImagePlus, Trash2, Sparkles } from 'lucide-react';
 import { motion } from 'framer-motion';
@@ -22,9 +22,9 @@ export default function StoreSettings() {
   const [store, setStore] = useState<any>({
     name: '', slug: '', description: '', primary_color: '#1136EE', secondary_color: '#ffffff',
     whatsapp_number: '', whatsapp_message_template: 'Hola! Me interesa: {{producto}} - ${{precio}}',
-    is_published: false, logo_url: '', banner_urls: [], announcement_text: '',
+    is_published: false, logo_url: '', banner_urls: [], announcement_1: '', announcement_2: '', announcement_3: '',
     font_family: 'Inter', catalog_layout: 'grid', about_text: '', payment_methods: [],
-    instagram_url: '', tiktok_url: '', facebook_url: ''
+    instagram_url: '', tiktok_url: '', facebook_url: '', order_form_enabled: false
   });
 
   const planStatus = usePlan(store?.id || null);
@@ -42,6 +42,8 @@ export default function StoreSettings() {
     document.head.appendChild(link);
     return () => { try { document.head.removeChild(link); } catch (e) {} };
   }, []);
+
+  const textareaRef = useRef<HTMLTextAreaElement>(null);
 
   useEffect(() => { loadStore(); }, []);
 
@@ -71,10 +73,13 @@ export default function StoreSettings() {
         ...store, ...data, payment_methods: parsedMethods, banner_urls: parsedBanners,
         catalog_layout: data.catalog_layout || 'grid', font_family: data.font_family || 'Inter',
         primary_color: data.primary_color || '#1136EE', secondary_color: data.secondary_color || '#ffffff',
-        announcement_text: data.announcement_text || '',
+        announcement_1: data.announcement_1 || data.announcement_text || '',
+        announcement_2: data.announcement_2 || '',
+        announcement_3: data.announcement_3 || '',
         instagram_url: data.instagram_url || '',
         tiktok_url: data.tiktok_url || '',
-        facebook_url: data.facebook_url || ''
+        facebook_url: data.facebook_url || '',
+        order_form_enabled: data.order_form_enabled || false
       });
 
       const customMethod = parsedMethods.find((m: string) => !DEFAULT_METHODS.includes(m));
@@ -133,6 +138,21 @@ export default function StoreSettings() {
     }
   };
 
+  const insertVariable = (variable: string) => {
+    const textarea = textareaRef.current;
+    if (!textarea) return;
+    const start = textarea.selectionStart;
+    const end = textarea.selectionEnd;
+    const currentText = store.whatsapp_message_template || '';
+    const newText = currentText.slice(0, start) + variable + currentText.slice(end);
+    setStore({ ...store, whatsapp_message_template: newText });
+    
+    setTimeout(() => {
+      textarea.focus();
+      textarea.setSelectionRange(start + variable.length, start + variable.length);
+    }, 0);
+  };
+
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     setSaving(true);
@@ -147,13 +167,14 @@ export default function StoreSettings() {
       primary_color: store.primary_color || '#1136EE', secondary_color: store.secondary_color || '#ffffff',
       font_family: store.font_family || 'Inter', catalog_layout: store.catalog_layout || 'grid',
       about_text: store.about_text || '', payment_methods: finalMethods,
-      announcement_text: store.announcement_text || '', logo_url: store.logo_url || '',
+      announcement_1: store.announcement_1 || '', announcement_2: store.announcement_2 || '', announcement_3: store.announcement_3 || '', logo_url: store.logo_url || '',
       banner_url: store.banner_urls && store.banner_urls.length > 0 ? JSON.stringify(store.banner_urls) : '',
       whatsapp_number: store.whatsapp_number || '', whatsapp_message_template: store.whatsapp_message_template || '',
       is_published: store.is_published, user_id: user.id,
       instagram_url: store.instagram_url || null,
       tiktok_url: store.tiktok_url || null,
-      facebook_url: store.facebook_url || null
+      facebook_url: store.facebook_url || null,
+      order_form_enabled: store.order_form_enabled || false
     };
 
     let saveError: any = null;
@@ -307,9 +328,13 @@ export default function StoreSettings() {
         </div>
 
         <div>
-          <label className="block text-sm font-bold text-[var(--text-1)] mb-1.5">Barra de anuncios superior</label>
-          <input type="text" value={store.announcement_text || ''} onChange={e => setStore({...store, announcement_text: e.target.value})} className="w-full h-[48px] px-4 rounded-xl border border-[var(--border)] bg-[var(--surface-1)] focus:bg-white focus:border-[var(--brand)] outline-none transition-colors text-[var(--text-1)] font-medium" placeholder="Ej: ¡Envío gratis en compras mayores a $50.000!" />
-          <p className="text-xs text-[var(--text-2)] mt-2 font-medium">Este texto aparecerá destacado en la parte más alta de tu tienda.</p>
+          <label className="block text-sm font-bold text-[var(--text-1)] mb-1.5">Promociones del banner <span style={{fontSize:'12px',color:'#888',fontWeight:'normal'}}>(máx. 3)</span></label>
+          <div className="flex flex-col gap-3">
+            <input type="text" value={store.announcement_1 || ''} onChange={e => setStore({...store, announcement_1: e.target.value})} className="w-full h-[48px] px-4 rounded-xl border border-[var(--border)] bg-[var(--surface-1)] focus:bg-white focus:border-[var(--brand)] outline-none transition-colors text-[var(--text-1)] font-medium" placeholder="Ej: ENVÍO GRATIS en compras mayores a $10.000" maxLength={80} />
+            <input type="text" value={store.announcement_2 || ''} onChange={e => setStore({...store, announcement_2: e.target.value})} className="w-full h-[48px] px-4 rounded-xl border border-[var(--border)] bg-[var(--surface-1)] focus:bg-white focus:border-[var(--brand)] outline-none transition-colors text-[var(--text-1)] font-medium" placeholder="Ej: 20% OFF en toda la tienda este fin de semana" maxLength={80} />
+            <input type="text" value={store.announcement_3 || ''} onChange={e => setStore({...store, announcement_3: e.target.value})} className="w-full h-[48px] px-4 rounded-xl border border-[var(--border)] bg-[var(--surface-1)] focus:bg-white focus:border-[var(--brand)] outline-none transition-colors text-[var(--text-1)] font-medium" placeholder="Ej: Nuevos productos cada semana" maxLength={80} />
+          </div>
+          <p className="text-xs text-[var(--text-2)] mt-2 font-medium">Los campos vacíos no aparecen en el banner. Con uno solo igual funciona.</p>
         </div>
 
         <div>
@@ -485,12 +510,63 @@ export default function StoreSettings() {
         </div>
 
         <div>
-          <label className="block text-sm font-bold text-[var(--text-1)] mb-1.5">Plantilla de mensaje</label>
-          <textarea value={store.whatsapp_message_template} onChange={e => setStore({...store, whatsapp_message_template: e.target.value})} className="w-full px-4 py-3 min-h-[100px] rounded-xl border border-[var(--border)] bg-[var(--surface-1)] focus:bg-white focus:border-[var(--brand)] outline-none transition-colors text-[var(--text-1)] font-medium resize-y"></textarea>
-          <div className="flex gap-2 mt-3">
-            <span className="text-xs font-mono font-bold bg-[var(--surface-2)] text-[var(--text-2)] px-2.5 py-1 rounded-md border border-[var(--border)]">{`{{producto}}`}</span>
-            <span className="text-xs font-mono font-bold bg-[var(--surface-2)] text-[var(--text-2)] px-2.5 py-1 rounded-md border border-[var(--border)]">{`{{precio}}`}</span>
+          <label className="block text-sm font-bold text-[var(--text-1)] mb-1.5">Plantilla del mensaje de WhatsApp</label>
+          <p style={{ fontSize: '13px', color: '#666', marginBottom: '8px' }}>
+            Escribí tu mensaje y usá los botones para insertar el nombre del producto y el precio automáticamente donde quieras.
+          </p>
+          <textarea
+            ref={textareaRef}
+            value={store.whatsapp_message_template || ''}
+            onChange={e => setStore({...store, whatsapp_message_template: e.target.value})}
+            className="w-full px-4 py-3 min-h-[100px] rounded-xl border border-[var(--border)] bg-[var(--surface-1)] focus:bg-white focus:border-[var(--brand)] outline-none transition-colors text-[var(--text-1)] font-medium resize-y"
+            placeholder="Ej: Hola! Me interesa comprar..."
+          ></textarea>
+          
+          <div style={{ display: 'flex', gap: '8px', marginTop: '12px', flexWrap: 'wrap' }}>
+            <p style={{ fontSize: '12px', color: '#888', width: '100%', margin: 0, fontWeight: 600 }}>
+              Tocá para insertar en el mensaje:
+            </p>
+            <button
+              type="button"
+              onClick={() => insertVariable('{{producto}}')}
+              className="bg-[#f0fdf4] border-[1.5px] border-[#22c55e] text-[#16a34a] px-3 py-1.5 rounded-full text-[13px] font-bold hover:bg-[#dcfce7] transition-colors"
+            >
+              + Nombre del producto
+            </button>
+            <button
+              type="button"
+              onClick={() => insertVariable('{{precio}}')}
+              className="bg-[#f0fdf4] border-[1.5px] border-[#22c55e] text-[#16a34a] px-3 py-1.5 rounded-full text-[13px] font-bold hover:bg-[#dcfce7] transition-colors"
+            >
+              + Precio
+            </button>
           </div>
+
+          <div className="mt-6 p-4 rounded-xl border border-[var(--border)] bg-[var(--surface-0)]">
+            <p style={{ fontSize: '12px', color: '#888', marginBottom: '8px', fontWeight: 600 }}>
+              Vista previa del mensaje:
+            </p>
+            <div style={{ background: '#dcfce7', borderRadius: '12px 12px 12px 0', padding: '10px 14px', fontSize: '14px', color: '#1a1a1a', maxWidth: '100%', wordBreak: 'break-word', display: 'inline-block' }}>
+              {(store.whatsapp_message_template || '')
+                .replace('{{producto}}', 'Remera negra talle M')
+                .replace('{{precio}}', '10000') || 'Tu mensaje aparecerá aquí...'}
+            </div>
+          </div>
+
+          {planStatus.isPlus && (
+            <div className="mt-6 p-4 rounded-xl border border-[var(--border)] bg-white shadow-sm">
+              <label className="flex items-center justify-between cursor-pointer">
+                <div>
+                  <span className="block font-bold text-[var(--text-1)] mb-0.5 text-sm">Formulario de pedido</span>
+                  <span className="block text-[13px] text-[var(--text-2)] font-medium max-w-[90%]">El comprador completa su info antes de enviarte el pedido por WhatsApp</span>
+                </div>
+                <div className={`w-12 h-6 rounded-full p-1 transition-colors duration-300 shrink-0 ${store.order_form_enabled ? 'bg-[var(--green)]' : 'bg-[var(--border-strong)]'}`}>
+                  <div className={`w-4 h-4 bg-white rounded-full transition-transform duration-300 ${store.order_form_enabled ? 'translate-x-6' : 'translate-x-0'}`}></div>
+                </div>
+                <input type="checkbox" checked={store.order_form_enabled || false} onChange={e => setStore({...store, order_form_enabled: e.target.checked})} className="hidden" />
+              </label>
+            </div>
+          )}
         </div>
       </motion.section>
 

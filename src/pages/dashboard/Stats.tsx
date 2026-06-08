@@ -44,18 +44,29 @@ export default function Stats() {
     async function loadViews() {
       if (!store?.id) return;
       
-      let query = supabase.from('store_views').select('viewed_at').eq('store_id', store.id);
-      
-      if (period !== 'all') {
-        const startDate = new Date();
-        if (period === 'week') startDate.setDate(startDate.getDate() - 7);
-        if (period === 'month') startDate.setMonth(startDate.getMonth() - 1);
-        query = query.gte('viewed_at', startDate.toISOString());
-      }
+      try {
+        let query = supabase.from('store_views').select('viewed_at').eq('store_id', store.id);
+        
+        if (period !== 'all') {
+          const startDate = new Date();
+          if (period === 'week') startDate.setDate(startDate.getDate() - 7);
+          if (period === 'month') startDate.setMonth(startDate.getMonth() - 1);
+          query = query.gte('viewed_at', startDate.toISOString());
+        }
 
-      const { data } = await query;
-      setViews(data || []);
-      setLoading(false);
+        const { data, error } = await query;
+        if (error) {
+          console.warn('store_views no disponible:', error.message);
+          setViews([]);
+        } else {
+          setViews(data || []);
+        }
+      } catch (e) {
+        console.warn('Error cargando vistas:', e);
+        setViews([]);
+      } finally {
+        setLoading(false);
+      }
     }
     loadViews();
   }, [store?.id, period]);

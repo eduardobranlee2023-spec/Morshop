@@ -44,6 +44,7 @@ export default function PublicStore() {
   
   const [selectedProduct, setSelectedProduct] = useState<any>(null);
   const [modalQuantity, setModalQuantity] = useState(1);
+  const [activeImage, setActiveImage] = useState<string | null>(null);
   
   const [cart, setCart] = useState<any[]>([]);
   const [isCartOpen, setIsCartOpen] = useState(false);
@@ -51,6 +52,9 @@ export default function PublicStore() {
   const [addedMessageId, setAddedMessageId] = useState<string | null>(null);
   const [activeBannerIndex, setActiveBannerIndex] = useState(0);
   const bannerScrollRef = useRef<HTMLDivElement>(null);
+
+  const [showOrderForm, setShowOrderForm] = useState(false);
+  const [orderForm, setOrderForm] = useState({ name: '', payment_method: '', address: '', note: '' });
   
   const isDesktop = useMediaQuery('(min-width: 768px)');
 
@@ -98,7 +102,12 @@ export default function PublicStore() {
     };
   }, [store]);
 
-  useEffect(() => { if (selectedProduct) setModalQuantity(1); }, [selectedProduct]);
+  useEffect(() => { 
+    if (selectedProduct) {
+      setModalQuantity(1);
+      setActiveImage(selectedProduct.image_url);
+    } 
+  }, [selectedProduct]);
 
   useEffect(() => {
     if (store?.id) {
@@ -128,12 +137,49 @@ export default function PublicStore() {
   const handleWhatsAppCart = () => {
     if (!store.whatsapp_number || cart.length === 0) return;
     
+    if (store.plan === 'plus' && store.order_form_enabled) {
+      setShowOrderForm(true);
+      return;
+    }
+    
     supabase.from('stores').update({ whatsapp_clicks: (store.whatsapp_clicks || 0) + 1 }).eq('id', store.id).then(() => {});
 
     const items = cart.map(i => `• ${i.name} x${i.quantity} — $${i.price * i.quantity}`).join('\n');
     const total = cart.reduce((acc, i) => acc + (i.price * i.quantity), 0);
     const mensaje = `Hola! Te hago el siguiente pedido:\n\n${items}\n\nTotal: $${total}`;
     window.open(`https://wa.me/${store.whatsapp_number}?text=${encodeURIComponent(mensaje)}`, '_blank');
+  };
+
+  const handleSubmitOrderForm = () => {
+    supabase.from('stores').update({ whatsapp_clicks: (store.whatsapp_clicks || 0) + 1 }).eq('id', store.id).then(() => {});
+
+    const productsList = cart.map(item =>
+      `• ${item.name} x${item.quantity} — $${(item.price * item.quantity).toLocaleString('es-AR')}`
+    ).join('\n');
+
+    const total = cart.reduce((sum, item) => sum + item.price * item.quantity, 0);
+
+    const message = `
+🛍️ *Nuevo pedido desde Morshop*
+
+*Productos:*
+${productsList}
+
+💰 *Total: $${total.toLocaleString('es-AR')}*
+
+━━━━━━━━━━━━━━
+👤 *Cliente:* ${orderForm.name}
+💳 *Método de pago:* ${orderForm.payment_method}
+${orderForm.address ? `📍 *Dirección:* ${orderForm.address}` : '🏪 *Retira en persona*'}
+${orderForm.note ? `📝 *Nota:* ${orderForm.note}` : ''}
+━━━━━━━━━━━━━━
+    `.trim();
+
+    const whatsappUrl = `https://wa.me/${store.whatsapp_number}?text=${encodeURIComponent(message)}`;
+    window.open(whatsappUrl, '_blank');
+    
+    setShowOrderForm(false);
+    setIsCartOpen(false);
   };
 
   const addToCart = (product: any, quantity: number = 1, e?: React.MouseEvent) => {
@@ -198,7 +244,7 @@ export default function PublicStore() {
         onClick={() => setSelectedProduct(product)}
         className="bg-white rounded-[12px] shadow-[0_2px_8px_rgba(0,0,0,0.08)] transition-all duration-200 cursor-pointer flex flex-col h-full overflow-hidden"
       >
-        <div className="w-full aspect-square bg-neutral-100 relative shrink-0">
+        <div className="w-full aspect-square bg-neutral-100 relative shrink-0 overflow-hidden">
           {product.original_price && (
             <div className="absolute top-2 left-2 z-10 bg-black text-white text-[10px] font-bold tracking-wider px-2 py-1 uppercase">
               OFERTA
@@ -210,9 +256,9 @@ export default function PublicStore() {
             </div>
           )}
           {product.image_url ? (
-            <img src={product.image_url} alt={product.name} className="w-full h-full object-cover" />
+            <img src={product.image_url} alt={product.name} className="absolute inset-0 w-full h-full" style={{ objectFit: product.image_fit || 'cover', objectPosition: 'center', background: '#f5f5f5' }} />
           ) : (
-            <div className="w-full h-full flex items-center justify-center text-neutral-300"><ImageIcon size={24} /></div>
+            <div className="absolute inset-0 w-full h-full flex items-center justify-center text-neutral-300"><ImageIcon size={24} /></div>
           )}
         </div>
         
@@ -244,31 +290,39 @@ export default function PublicStore() {
     );
   };
 
+  const announcements = store ? [
+    store.announcement_1,
+    store.announcement_2,
+    store.announcement_3,
+  ].filter(Boolean) : [];
+
   return (
     <div style={storeTheme} className="min-h-screen flex flex-col bg-white">
       
       {/* 1. Announcement Bar con Animación Loop */}
-      {store.announcement_text && (
+      {announcements.length > 0 && (
         <div style={{ overflow: 'hidden', background: primaryColor, padding: '8px 0', width: '100%' }}>
           <motion.div
             style={{ display: 'flex', whiteSpace: 'nowrap', width: 'fit-content' }}
             animate={{ x: ['0%', '-50%'] }}
-            transition={{ duration: 18, repeat: Infinity, ease: 'linear' }}
+            transition={{ duration: 20, repeat: Infinity, ease: 'linear' }}
           >
-            {/* Repetir el texto 8 veces para garantizar loop sin espacios vacíos */}
-            {Array(8).fill(store.announcement_text).map((text, i) => (
-              <span
-                key={i}
-                style={{
-                  color: contrastColor,
-                  marginRight: '80px',
-                  fontSize: '13px',
-                  fontWeight: 600,
-                  flexShrink: 0,
-                }}
-              >
-                {text}
-              </span>
+            {/* Repetir 8 veces para loop infinito sin espacios */}
+            {Array(8).fill(null).map((_, i) => (
+              announcements.map((text, j) => (
+                <span
+                  key={`${i}-${j}`}
+                  style={{
+                    color: contrastColor,
+                    marginRight: '60px',
+                    fontSize: '13px',
+                    fontWeight: 600,
+                    flexShrink: 0,
+                  }}
+                >
+                  ✦ {text}
+                </span>
+              ))
             ))}
           </motion.div>
         </div>
@@ -285,7 +339,12 @@ export default function PublicStore() {
                 {store.name.charAt(0).toUpperCase()}
               </div>
             )}
-            <h1 className="font-bold truncate text-[16px] md:text-[18px] text-[var(--text-1)]">{store.name}</h1>
+            <div>
+              <h1 className="font-bold truncate text-[16px] md:text-[18px] text-[var(--text-1)] m-0 leading-tight">{store.name}</h1>
+              {store.description && (
+                <p className="text-[13px] text-neutral-500 m-0 italic mt-0.5 truncate">{store.description}</p>
+              )}
+            </div>
           </div>
           <button onClick={() => setIsCartOpen(true)} className="relative p-2 shrink-0 ml-2 text-[var(--text-1)]">
             <ShoppingCart size={24} />
@@ -459,12 +518,36 @@ export default function PublicStore() {
               
               {/* Imagen (Fija arriba) */}
               <div className="modal-image" style={{ height: '280px', flexShrink: 0, background: '#f5f5f5', overflow: 'hidden' }}>
-                {selectedProduct.image_url ? (
-                  <img src={selectedProduct.image_url} alt={selectedProduct.name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                {activeImage ? (
+                  <img src={activeImage} alt={selectedProduct.name} style={{ width: '100%', height: '100%', objectFit: selectedProduct.image_fit || 'cover', objectPosition: 'center', background: '#f5f5f5' }} />
                 ) : (
                   <div className="w-full h-full flex items-center justify-center text-neutral-300"><ImageIcon size={48} /></div>
                 )}
               </div>
+
+              {/* Miniaturas si hay 2 imágenes */}
+              {selectedProduct.image_url_2 && (
+                <div style={{ display: 'flex', gap: '8px', padding: '8px 16px' }}>
+                  <img
+                    src={selectedProduct.image_url}
+                    onClick={() => setActiveImage(selectedProduct.image_url)}
+                    style={{
+                      width: '56px', height: '56px', objectFit: selectedProduct.image_fit || 'cover', borderRadius: '8px',
+                      border: activeImage === selectedProduct.image_url ? `2px solid ${primaryColor}` : '2px solid #e5e7eb',
+                      cursor: 'pointer', background: '#f5f5f5'
+                    }}
+                  />
+                  <img
+                    src={selectedProduct.image_url_2}
+                    onClick={() => setActiveImage(selectedProduct.image_url_2)}
+                    style={{
+                      width: '56px', height: '56px', objectFit: selectedProduct.image_fit || 'cover', borderRadius: '8px',
+                      border: activeImage === selectedProduct.image_url_2 ? `2px solid ${primaryColor}` : '2px solid #e5e7eb',
+                      cursor: 'pointer', background: '#f5f5f5'
+                    }}
+                  />
+                </div>
+              )}
 
               {/* Contenido scrolleable */}
               <div className="modal-content" style={{ flex: 1, overflowY: 'auto', padding: '20px 16px', display: 'flex', flexDirection: 'column', gap: '12px', paddingBottom: '24px' }}>
@@ -592,6 +675,102 @@ export default function PublicStore() {
           </div>
         </div>
       )}
+
+      {/* Formulario de pedido (Plus) */}
+      <AnimatePresence>
+        {showOrderForm && (
+          <motion.div
+            className="order-form-overlay"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+          >
+            <motion.div
+              className="order-form-sheet"
+              initial={{ y: '100%' }}
+              animate={{ y: 0 }}
+              exit={{ y: '100%' }}
+              transition={{ type: 'spring', damping: 28, stiffness: 320 }}
+            >
+              <div className="order-form-header">
+                <h3 style={{ margin: 0, fontSize: '18px', fontWeight: 800, color: '#1a1a1a' }}>Completá tu pedido</h3>
+                <button onClick={() => setShowOrderForm(false)} style={{ background: 'none', border: 'none', fontSize: '20px', cursor: 'pointer', color: '#666' }}>✕</button>
+              </div>
+
+              <div className="order-form-body">
+                {/* Campo: Nombre */}
+                <div className="form-field">
+                  <label>Tu nombre *</label>
+                  <input
+                    type="text"
+                    placeholder="Ej: María García"
+                    value={orderForm.name}
+                    onChange={e => setOrderForm({...orderForm, name: e.target.value})}
+                  />
+                </div>
+
+                {/* Campo: Método de pago */}
+                <div className="form-field">
+                  <label>¿Cómo vas a abonar? *</label>
+                  <div className="payment-options">
+                    {paymentMethods.map(method => (
+                      <button
+                        key={method}
+                        type="button"
+                        onClick={() => setOrderForm({...orderForm, payment_method: method})}
+                        className={`payment-option-btn ${orderForm.payment_method === method ? 'selected' : ''}`}
+                      >
+                        {method}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Campo: Dirección de entrega */}
+                <div className="form-field">
+                  <label>¿Dónde querés recibirlo?</label>
+                  <input
+                    type="text"
+                    placeholder="Ej: Av. Corrientes 1234, CABA"
+                    value={orderForm.address}
+                    onChange={e => setOrderForm({...orderForm, address: e.target.value})}
+                  />
+                  <p style={{ fontSize: '12px', color: '#888', marginTop: '4px', margin: 0 }}>
+                    Opcional — dejalo vacío si retirás vos
+                  </p>
+                </div>
+
+                {/* Campo: Nota adicional */}
+                <div className="form-field">
+                  <label>¿Algo más que quieras aclarar?</label>
+                  <textarea
+                    placeholder="Ej: talle, color, horario de entrega..."
+                    value={orderForm.note}
+                    onChange={e => setOrderForm({...orderForm, note: e.target.value})}
+                    rows={3}
+                  />
+                </div>
+              </div>
+
+              {/* Botón de enviar */}
+              <div className="order-form-footer">
+                <button
+                  className="whatsapp-submit-btn"
+                  disabled={!orderForm.name || !orderForm.payment_method}
+                  onClick={handleSubmitOrderForm}
+                >
+                  <span>💬</span> Enviar pedido por WhatsApp
+                </button>
+                {(!orderForm.name || !orderForm.payment_method) && (
+                  <p style={{ fontSize: '12px', color: '#e53e3e', textAlign: 'center', marginTop: '6px', marginBottom: 0, fontWeight: 500 }}>
+                    Completá tu nombre y método de pago para continuar
+                  </p>
+                )}
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   );
 }

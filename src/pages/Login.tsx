@@ -2,14 +2,15 @@ import { useState } from 'react';
 import { supabase } from '../lib/supabase';
 import { useNavigate, Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { CheckCircle2 } from 'lucide-react';
-
+import { CheckCircle2, Eye, EyeOff } from 'lucide-react';
 export default function Login() {
   const [isLogin, setIsLogin] = useState(true);
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
+  const [emailSent, setEmailSent] = useState(false);
   const navigate = useNavigate();
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -29,10 +30,12 @@ export default function Login() {
         const { error } = await supabase.auth.signUp({
           email,
           password,
+          options: {
+            emailRedirectTo: 'https://morshop.vercel.app/dashboard',
+          },
         });
         if (error) throw error;
-        alert('Registro exitoso. Por favor iniciá sesión.');
-        setIsLogin(true);
+        setEmailSent(true);
       }
     } catch (err: any) {
       setError(err.message || 'Ocurrió un error');
@@ -40,6 +43,56 @@ export default function Login() {
       setLoading(false);
     }
   };
+
+  const handleResendEmail = async () => {
+    try {
+      const { error } = await supabase.auth.resend({
+        type: 'signup',
+        email,
+        options: {
+          emailRedirectTo: 'https://morshop.vercel.app/dashboard',
+        },
+      });
+      if (error) throw error;
+      alert('Correo reenviado exitosamente.');
+    } catch (err: any) {
+      alert(err.message || 'Error al reenviar correo.');
+    }
+  };
+
+  if (emailSent) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-[#f8fafc] font-sans">
+        <motion.div 
+          initial={{ opacity: 0, scale: 0.95 }}
+          animate={{ opacity: 1, scale: 1 }}
+          className="bg-white p-8 md:p-12 rounded-2xl shadow-xl w-full max-w-[480px] text-center border border-gray-100"
+        >
+          <div style={{ fontSize: '48px', textAlign: 'center', marginBottom: '16px' }}>📧</div>
+          
+          <h2 className="text-3xl font-extrabold text-[var(--text-1)] tracking-tight mb-4">Revisá tu correo</h2>
+          
+          <p className="text-[var(--text-2)] font-medium mb-8">
+            Te enviamos un link de verificación a <strong>{email}</strong>.<br />
+            Tocá el botón del correo para activar tu cuenta y empezar a crear tu tienda.
+          </p>
+
+          <div className="text-left bg-gray-50 p-6 rounded-xl space-y-4 mb-8 border border-gray-100">
+            <p className="font-medium text-gray-700">📩 Paso 1 — Abrí tu casilla de correo</p>
+            <p className="font-medium text-gray-700">🔗 Paso 2 — Tocá "Confirm email address"</p>
+            <p className="font-medium text-[var(--brand)]">🚀 Paso 3 — Te redirige automáticamente a Morshop</p>
+          </div>
+
+          <p style={{ fontSize: '14px', color: '#64748b', marginTop: '16px', fontWeight: 500 }}>
+            ¿No te llegó? Revisá la carpeta de spam o{' '}
+            <button onClick={handleResendEmail} style={{ background: 'none', border: 'none', color: 'var(--brand)', cursor: 'pointer', textDecoration: 'underline', fontWeight: 'bold' }}>
+              reenviá el correo
+            </button>
+          </p>
+        </motion.div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen flex bg-white font-sans selection:bg-[var(--brand-light)] selection:text-[var(--brand-dark)]">
@@ -117,14 +170,36 @@ export default function Login() {
             </div>
             <div>
               <label className="block text-sm font-bold text-[var(--text-1)] mb-1.5">Contraseña</label>
-              <input
-                type="password"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                placeholder="••••••••"
-                className="w-full px-4 h-[48px] rounded-xl border border-[var(--border)] bg-[var(--surface-1)] text-[var(--text-1)] placeholder-[var(--text-3)] focus:bg-white focus:ring-0 focus:border-[var(--brand)] outline-none transition-all duration-150"
-                required
-              />
+              <div style={{ position: 'relative' }}>
+                <input
+                  type={showPassword ? 'text' : 'password'}
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  placeholder="••••••••"
+                  className="w-full px-4 h-[48px] rounded-xl border border-[var(--border)] bg-[var(--surface-1)] text-[var(--text-1)] placeholder-[var(--text-3)] focus:bg-white focus:ring-0 focus:border-[var(--brand)] outline-none transition-all duration-150 pr-12"
+                  required
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowPassword(!showPassword)}
+                  style={{
+                    position: 'absolute',
+                    right: '12px',
+                    top: '50%',
+                    transform: 'translateY(-50%)',
+                    background: 'none',
+                    border: 'none',
+                    cursor: 'pointer',
+                    color: '#888',
+                    padding: '4px',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                  }}
+                >
+                  {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+                </button>
+              </div>
             </div>
             
             <button

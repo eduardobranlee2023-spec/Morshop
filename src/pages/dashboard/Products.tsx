@@ -12,6 +12,7 @@ export default function Products() {
   const [isUpgradeModalOpen, setIsUpgradeModalOpen] = useState(false);
   const planStatus = usePlan(store?.id || null);
   const [uploadingImage, setUploadingImage] = useState(false);
+  const [uploadingImage2, setUploadingImage2] = useState(false);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isCategoryModalOpen, setIsCategoryModalOpen] = useState(false);
   const [categories, setCategories] = useState<any[]>([]);
@@ -71,6 +72,23 @@ export default function Products() {
       alert(err.message);
     } finally {
       setUploadingImage(false);
+    }
+  }
+
+  async function uploadFile2(file: File) {
+    if (!store) return;
+    setUploadingImage2(true);
+    try {
+      const ext = file.name.split('.').pop();
+      const path = `${store.id}/${Math.random()}.${ext}`;
+      const { error } = await supabase.storage.from('products').upload(path, file);
+      if (error) throw error;
+      const { data } = supabase.storage.from('products').getPublicUrl(path);
+      setEditingProduct((prev: any) => ({ ...prev, image_url_2: data.publicUrl }));
+    } catch (err: any) {
+      alert(err.message);
+    } finally {
+      setUploadingImage2(false);
     }
   }
 
@@ -144,7 +162,7 @@ export default function Products() {
   }
 
   function openNew() {
-    setEditingProduct({ name: '', description: '', price: '', original_price: '', category_id: '', available: true, image_url: '', is_featured: false });
+    setEditingProduct({ name: '', description: '', price: '', original_price: '', category_id: '', available: true, image_url: '', image_url_2: '', image_fit: 'cover', is_featured: false });
     setIsModalOpen(true);
   }
 
@@ -397,49 +415,129 @@ export default function Products() {
 
               <form onSubmit={handleSave} className="flex flex-col flex-1 overflow-y-auto no-scrollbar">
                 <div className="p-6 space-y-6">
-                  {/* Dropzone */}
-                  <div>
-                    <label className="block text-sm font-bold text-[var(--text-1)] mb-2">Imagen del producto</label>
-                    <div
-                      ref={dropRef}
-                      onDragOver={e => { e.preventDefault(); setIsDragging(true); }}
-                      onDragLeave={() => setIsDragging(false)}
-                      onDrop={handleDrop}
-                      className={`relative w-full rounded-2xl border-2 border-dashed transition-all duration-300 overflow-hidden bg-[var(--surface-1)] flex items-center justify-center ${isDragging ? 'border-[var(--brand)] bg-[var(--brand-light)]' : 'border-[var(--border-strong)] hover:border-[var(--brand)]'}`}
-                      style={{ minHeight: editingProduct.image_url ? 'auto' : '160px' }}
-                    >
-                      {editingProduct.image_url ? (
-                        <div className="relative w-full">
-                          <img src={editingProduct.image_url} alt="Preview" className="w-full max-h-[300px] object-cover" />
-                          <button
-                            type="button"
-                            onClick={() => setEditingProduct({ ...editingProduct, image_url: '' })}
-                            className="absolute top-3 right-3 w-[40px] h-[40px] bg-white/90 backdrop-blur shadow-sm rounded-full flex items-center justify-center text-red-600 hover:scale-105 transition-transform"
-                          >
-                            <X size={20} />
-                          </button>
-                        </div>
-                      ) : (
-                        <div className="flex flex-col items-center justify-center text-[var(--text-2)] p-6">
-                          <div className="w-12 h-12 bg-white rounded-full flex items-center justify-center mb-3 shadow-sm border border-[var(--border)]">
-                            <Upload size={20} className="text-[var(--brand)]" />
+                  <div className="space-y-4">
+                    {/* Imagen principal */}
+                    <div>
+                      <label className="block text-sm font-bold text-[var(--text-1)] mb-2">Imagen principal</label>
+                      <div
+                        ref={dropRef}
+                        onDragOver={e => { e.preventDefault(); setIsDragging(true); }}
+                        onDragLeave={() => setIsDragging(false)}
+                        onDrop={handleDrop}
+                        className={`relative w-full rounded-2xl border-2 border-dashed transition-all duration-300 overflow-hidden bg-[var(--surface-1)] flex items-center justify-center ${isDragging ? 'border-[var(--brand)] bg-[var(--brand-light)]' : 'border-[var(--border-strong)] hover:border-[var(--brand)]'}`}
+                        style={{ minHeight: editingProduct.image_url ? 'auto' : '160px' }}
+                      >
+                        {editingProduct.image_url ? (
+                          <div className="relative w-full">
+                            <img src={editingProduct.image_url} alt="Preview" className="w-full max-h-[300px] bg-[#f5f5f5]" style={{ objectFit: editingProduct.image_fit || 'cover', objectPosition: 'center' }} />
+                            <button
+                              type="button"
+                              onClick={() => setEditingProduct({ ...editingProduct, image_url: '' })}
+                              className="absolute top-3 right-3 w-[40px] h-[40px] bg-white/90 backdrop-blur shadow-sm rounded-full flex items-center justify-center text-red-600 hover:scale-105 transition-transform"
+                            >
+                              <X size={20} />
+                            </button>
                           </div>
-                          <p className="text-sm font-bold">Arrastrá una imagen o hacé clic</p>
-                          <p className="text-xs text-[var(--text-3)] font-medium mt-1">Soporta JPG, PNG o WEBP</p>
+                        ) : (
+                          <div className="flex flex-col items-center justify-center text-[var(--text-2)] p-6">
+                            <div className="w-12 h-12 bg-white rounded-full flex items-center justify-center mb-3 shadow-sm border border-[var(--border)]">
+                              <Upload size={20} className="text-[var(--brand)]" />
+                            </div>
+                            <p className="text-sm font-bold">Arrastrá una imagen o hacé clic</p>
+                            <p className="text-xs text-[var(--text-3)] font-medium mt-1">Soporta JPG, PNG o WEBP</p>
+                          </div>
+                        )}
+                        <input
+                          type="file" accept="image/*"
+                          onChange={e => { const f = e.target.files?.[0]; if (f) uploadFile(f); }}
+                          className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
+                          disabled={uploadingImage}
+                        />
+                        {uploadingImage && (
+                          <div className="absolute inset-0 bg-white/90 backdrop-blur-sm flex flex-col items-center justify-center z-10">
+                             <div className="w-8 h-8 border-4 border-[var(--brand-light)] border-t-[var(--brand)] rounded-full animate-spin mb-2" />
+                             <span className="text-sm font-bold text-[var(--brand)]">Subiendo imagen...</span>
+                          </div>
+                        )}
+                      </div>
+
+                      {/* Ajuste de formato */}
+                      {editingProduct.image_url && (
+                        <div className="mt-3 bg-[var(--surface-1)] p-3 rounded-xl border border-[var(--border)]">
+                          <label style={{ fontSize: '13px', color: '#666', fontWeight: 600 }}>
+                            ¿Cómo se ve la imagen en la tarjeta?
+                          </label>
+                          <div style={{ display: 'flex', gap: '8px', marginTop: '6px' }}>
+                            <button
+                              type="button"
+                              onClick={() => setEditingProduct({...editingProduct, image_fit: 'cover'})}
+                              style={{
+                                flex: 1, padding: '10px', borderRadius: '10px',
+                                border: `2px solid ${editingProduct.image_fit === 'cover' || !editingProduct.image_fit ? '#22c55e' : '#e5e7eb'}`,
+                                background: editingProduct.image_fit === 'cover' || !editingProduct.image_fit ? '#f0fdf4' : 'white',
+                                cursor: 'pointer', fontSize: '13px', textAlign: 'center', transition: 'all 0.15s'
+                              }}
+                            >
+                              <div style={{ fontSize: '20px' }}>🔍</div>
+                              <strong>Recortada</strong>
+                              <p style={{ fontSize: '11px', color: '#888', margin: '2px 0 0 0' }}>Llena la tarjeta</p>
+                            </button>
+
+                            <button
+                              type="button"
+                              onClick={() => setEditingProduct({...editingProduct, image_fit: 'contain'})}
+                              style={{
+                                flex: 1, padding: '10px', borderRadius: '10px',
+                                border: `2px solid ${editingProduct.image_fit === 'contain' ? '#22c55e' : '#e5e7eb'}`,
+                                background: editingProduct.image_fit === 'contain' ? '#f0fdf4' : 'white',
+                                cursor: 'pointer', fontSize: '13px', textAlign: 'center', transition: 'all 0.15s'
+                              }}
+                            >
+                              <div style={{ fontSize: '20px' }}>🖼️</div>
+                              <strong>Completa</strong>
+                              <p style={{ fontSize: '11px', color: '#888', margin: '2px 0 0 0' }}>Imagen entera visible</p>
+                            </button>
+                          </div>
                         </div>
                       )}
-                      <input
-                        type="file" accept="image/*"
-                        onChange={e => { const f = e.target.files?.[0]; if (f) uploadFile(f); }}
-                        className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
-                        disabled={uploadingImage}
-                      />
-                      {uploadingImage && (
-                        <div className="absolute inset-0 bg-white/90 backdrop-blur-sm flex flex-col items-center justify-center z-10">
-                           <div className="w-8 h-8 border-4 border-[var(--brand-light)] border-t-[var(--brand)] rounded-full animate-spin mb-2" />
-                           <span className="text-sm font-bold text-[var(--brand)]">Subiendo imagen...</span>
-                        </div>
-                      )}
+                    </div>
+
+                    {/* Segunda imagen */}
+                    <div>
+                      <label className="block text-sm font-bold text-[var(--text-1)] mb-2">Segunda imagen <span style={{fontSize:'12px',color:'#888',fontWeight:'normal'}}>(opcional)</span></label>
+                      <div
+                        className="relative w-full rounded-2xl border-2 border-dashed transition-all duration-300 overflow-hidden bg-[var(--surface-1)] flex items-center justify-center border-[var(--border-strong)] hover:border-[var(--brand)]"
+                        style={{ minHeight: editingProduct.image_url_2 ? 'auto' : '100px' }}
+                      >
+                        {editingProduct.image_url_2 ? (
+                          <div className="relative w-full">
+                            <img src={editingProduct.image_url_2} alt="Preview 2" className="w-full max-h-[200px] bg-[#f5f5f5]" style={{ objectFit: editingProduct.image_fit || 'cover', objectPosition: 'center' }} />
+                            <button
+                              type="button"
+                              onClick={() => setEditingProduct({ ...editingProduct, image_url_2: '' })}
+                              className="absolute top-3 right-3 w-[40px] h-[40px] bg-white/90 backdrop-blur shadow-sm rounded-full flex items-center justify-center text-red-600 hover:scale-105 transition-transform"
+                            >
+                              <X size={20} />
+                            </button>
+                          </div>
+                        ) : (
+                          <div className="flex flex-col items-center justify-center text-[var(--text-2)] p-4">
+                            <Upload size={20} className="text-[var(--text-3)] mb-2" />
+                            <p className="text-sm font-bold">Hacé clic para subir</p>
+                          </div>
+                        )}
+                        <input
+                          type="file" accept="image/*"
+                          onChange={e => { const f = e.target.files?.[0]; if (f) uploadFile2(f); }}
+                          className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
+                          disabled={uploadingImage2}
+                        />
+                        {uploadingImage2 && (
+                          <div className="absolute inset-0 bg-white/90 backdrop-blur-sm flex flex-col items-center justify-center z-10">
+                             <div className="w-6 h-6 border-4 border-[var(--brand-light)] border-t-[var(--brand)] rounded-full animate-spin mb-2" />
+                          </div>
+                        )}
+                      </div>
                     </div>
                   </div>
 

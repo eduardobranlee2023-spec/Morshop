@@ -20,17 +20,19 @@ export const PLANS = {
   },
   plus: {
     name: 'Morshop Plus',
-    price: 4999, // en pesos argentinos — ajustar según decisión
+    price: 18400,
     currency: 'ARS',
     billingPeriod: 'monthly',
     maxProducts: Infinity,
     features: [
       'Productos ilimitados',
+      'Formulario de pedido avanzado',
+      'Tipografías premium',
+      'Hasta 2 imágenes por producto',
+      'Estadísticas de tu tienda',
+      'Estilos visuales avanzados',
       'Sin branding de Morshop',
       'Redes sociales en tu tienda',
-      'Tipografías premium',
-      'Soporte prioritario',
-      'Estadísticas de visitas (próximamente)',
     ],
   }
 } as const;

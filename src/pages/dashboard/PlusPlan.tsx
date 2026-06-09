@@ -95,7 +95,7 @@ function PaymentModal({ storeId, onClose }: PaymentModalProps) {
       >
         <div style={{ textAlign: 'center', marginBottom: '24px' }}>
           <h2 style={{ fontSize: '24px', fontWeight: 800, color: '#111', margin: '0 0 8px' }}>
-            ⭐ Plan Plus — $18.900/mes
+            ⭐ Plan Plus — $18.400/mes
           </h2>
           <p style={{ color: '#6b7280', fontSize: '15px', margin: 0 }}>
             Cobro automático mensual por Mercado Pago. Cancelás cuando querés.
@@ -496,7 +496,7 @@ export default function PlusPlan() {
             color: '#fff', fontSize: '15px', fontWeight: 700,
           }}>
             <Zap size={15} fill="#fff" />
-            Solo $4.999/mes · Cancelá cuando quieras
+            Solo $18.400/mes · Cancelá cuando quieras
           </div>
         </div>
 
@@ -605,7 +605,7 @@ export default function PlusPlan() {
                 </h2>
               </div>
               <div style={{ display: 'flex', alignItems: 'baseline', gap: '4px', margin: '4px 0 8px' }}>
-                <span style={{ fontSize: '36px', fontWeight: 900, color: '#111' }}>$4.999</span>
+                <span style={{ fontSize: '36px', fontWeight: 900, color: '#111' }}>$18.400</span>
                 <span style={{ color: '#6b7280', fontSize: '15px' }}> / mes</span>
               </div>
               <p style={{ color: '#4b5563', fontSize: '14px', margin: '0 0 24px' }}>
@@ -615,14 +615,17 @@ export default function PlusPlan() {
               <div style={{ borderTop: '1px solid rgba(17,54,238,0.12)', paddingTop: '20px' }}>
                 {[
                   { label: 'Productos ilimitados', type: 'check' },
+                  { label: 'Formulario de pedido avanzado', type: 'check' },
+                  { label: 'Tipografías premium', type: 'check' },
+                  { label: 'Hasta 2 imágenes por producto', type: 'check' },
+                  { label: 'Estadísticas de tu tienda', type: 'check' },
+                  { label: 'Estilos visuales avanzados', type: 'check' },
                   { label: 'Sin branding de Morshop', type: 'check' },
                   { label: 'Redes sociales en tu tienda', type: 'check' },
                   { label: 'Colores y logo personalizados', type: 'check' },
                   { label: 'Carrito virtual', type: 'check' },
                   { label: 'Consultas por WhatsApp', type: 'check' },
                   { label: 'Soporte prioritario', type: 'check' },
-                  { label: 'Estadísticas de visitas', type: 'coming' },
-                  { label: 'Estilos visuales avanzados', type: 'coming' },
                 ].map(({ label, type }) => (
                   <div key={label} style={{
                     display: 'flex', alignItems: 'center', gap: '10px',
@@ -717,6 +720,11 @@ export default function PlusPlan() {
 
           <FeatureRow label="Hasta 15 productos" free={true} plus={true} />
           <FeatureRow label="Productos ilimitados" free={false} plus={true} />
+          <FeatureRow label="Formulario de pedido avanzado" free={false} plus={true} />
+          <FeatureRow label="Tipografías premium" free={false} plus={true} />
+          <FeatureRow label="Hasta 2 imágenes por producto" free={false} plus={true} />
+          <FeatureRow label="Estadísticas de tu tienda" free={false} plus={true} />
+          <FeatureRow label="Estilos visuales avanzados" free={false} plus={true} />
           <FeatureRow label="Colores y logo personalizados" free={true} plus={true} />
           <FeatureRow label="Carrito virtual" free={true} plus={true} />
           <FeatureRow label="Consultas por WhatsApp" free={true} plus={true} />
@@ -724,8 +732,6 @@ export default function PlusPlan() {
           <FeatureRow label="Redes sociales en la tienda" free={false} plus={true} />
           <FeatureRow label="Sin branding de Morshop" free={false} plus={true} />
           <FeatureRow label="Soporte prioritario" free={false} plus={true} />
-          <FeatureRow label="Estadísticas de visitas" free={false} plus="coming" />
-          <FeatureRow label="Estilos visuales avanzados" free={false} plus="coming" />
         </div>
 
         {/* ── GARANTÍA ─────────────────────────────────────────────────────── */}

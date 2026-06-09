@@ -308,7 +308,7 @@ export default function AdminPanel() {
           <p className="text-sm text-gray-500">Ejecuta la función Edge para enviar emails a quienes vencen en 3 días o menos.</p>
         </div>
       </section>
-      </section>
+
 
       {/* SECCIÓN 5: TEMPLATES DE EMAIL */}
       <section className="bg-white border border-gray-200 rounded-2xl p-6 shadow-sm">

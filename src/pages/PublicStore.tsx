@@ -45,6 +45,7 @@ export default function PublicStore() {
   const [selectedProduct, setSelectedProduct] = useState<any>(null);
   const [modalQuantity, setModalQuantity] = useState(1);
   const [activeImage, setActiveImage] = useState<string | null>(null);
+  const [expandedImage, setExpandedImage] = useState<string | null>(null);
   
   const [cart, setCart] = useState<any[]>([]);
   const [isCartOpen, setIsCartOpen] = useState(false);
@@ -573,9 +574,33 @@ ${orderForm.note ? `📝 *Nota:* ${orderForm.note}` : ''}
               <button onClick={() => setSelectedProduct(null)} className="absolute top-4 right-4 z-20 w-[40px] h-[40px] bg-white/90 backdrop-blur rounded-full flex items-center justify-center shadow-md text-black hover:bg-white"><X size={20} /></button>
               
               {/* Imagen (Fija arriba) */}
-              <div className="modal-image" style={{ height: '280px', flexShrink: 0, background: '#f5f5f5', overflow: 'hidden' }}>
+              <div className="modal-image" style={{ height: '280px', flexShrink: 0, background: '#f5f5f5', overflow: 'hidden', position: 'relative' }}>
                 {activeImage ? (
-                  <img src={activeImage} alt={selectedProduct.name} style={{ width: '100%', height: '100%', objectFit: selectedProduct.image_fit || 'cover', objectPosition: 'center', background: '#f5f5f5' }} />
+                  <>
+                    <img src={activeImage} alt={selectedProduct.name} style={{ width: '100%', height: '100%', objectFit: selectedProduct.image_fit || 'cover', objectPosition: 'center', background: '#f5f5f5' }} />
+                    <button
+                      onClick={(e) => { e.stopPropagation(); setExpandedImage(activeImage); }}
+                      style={{
+                        position: 'absolute',
+                        bottom: '8px',
+                        right: '8px',
+                        width: '36px',
+                        height: '36px',
+                        borderRadius: '50%',
+                        background: 'rgba(0,0,0,0.5)',
+                        color: 'white',
+                        border: 'none',
+                        cursor: 'pointer',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        fontSize: '16px',
+                        zIndex: 10,
+                      }}
+                    >
+                      🔍
+                    </button>
+                  </>
                 ) : (
                   <div className="w-full h-full flex items-center justify-center text-neutral-300"><ImageIcon size={48} /></div>
                 )}
@@ -827,6 +852,67 @@ ${orderForm.note ? `📝 *Nota:* ${orderForm.note}` : ''}
           </motion.div>
         )}
       </AnimatePresence>
+
+      {/* Overlay de imagen expandida */}
+      {expandedImage && (
+        <div
+          onClick={() => setExpandedImage(null)}
+          style={{
+            position: 'fixed',
+            inset: 0,
+            background: 'rgba(0,0,0,0.95)',
+            zIndex: 2000,
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            padding: '16px',
+          }}
+        >
+          {/* Botón cerrar */}
+          <button
+            onClick={() => setExpandedImage(null)}
+            style={{
+              position: 'absolute',
+              top: '16px',
+              right: '16px',
+              width: '40px',
+              height: '40px',
+              borderRadius: '50%',
+              background: 'rgba(255,255,255,0.2)',
+              color: 'white',
+              border: 'none',
+              cursor: 'pointer',
+              fontSize: '20px',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+            }}
+          >
+            ✕
+          </button>
+
+          {/* Imagen expandida */}
+          <img
+            src={expandedImage}
+            style={{
+              maxWidth: '100%',
+              maxHeight: '90vh',
+              objectFit: 'contain',
+              borderRadius: '8px',
+            }}
+            onClick={e => e.stopPropagation()}
+          />
+
+          <p style={{
+            position: 'absolute',
+            bottom: '16px',
+            color: 'rgba(255,255,255,0.5)',
+            fontSize: '13px',
+          }}>
+            Tocá en cualquier lado para cerrar
+          </p>
+        </div>
+      )}
     </div>
   );
 }

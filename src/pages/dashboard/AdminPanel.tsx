@@ -11,6 +11,16 @@ export default function AdminPanel() {
   const [activeStores, setActiveStores] = useState<any[]>([]);
   const [history, setHistory] = useState<any[]>([]);
 
+  // Estado para el modal de confirmación
+  const [confirmModal, setConfirmModal] = useState<{
+    open: boolean;
+    type: 'activate' | 'reject';
+    requestId: string;
+    storeName: string;
+    storeId: string;
+    userEmail: string;
+  } | null>(null);
+
   // Filtros del historial
   const [filterStatus, setFilterStatus] = useState('all');
   const [searchTerm, setSearchTerm] = useState('');
@@ -68,7 +78,6 @@ export default function AdminPanel() {
   };
 
   const handleActivate = async (req: any) => {
-    if (!confirm(`¿Activar plan Plus para ${req.store_name}?`)) return;
     try {
       const { data, error } = await supabase.functions.invoke('activate-plus', {
         body: {
@@ -91,7 +100,6 @@ export default function AdminPanel() {
   };
 
   const handleReject = async (req: any) => {
-    if (!confirm(`¿Rechazar pago de ${req.store_name}?`)) return;
     try {
       const { data, error } = await supabase.functions.invoke('reject-payment', {
         body: {
@@ -172,8 +180,8 @@ export default function AdminPanel() {
                       <td className="py-3 px-2 font-medium">${req.amount.toLocaleString('es-AR')}</td>
                       <td className="py-3 px-2 text-gray-600">{hoursAgo} horas</td>
                       <td className="py-3 px-2 flex gap-2">
-                        <button onClick={() => handleActivate(req)} className="bg-green-100 text-green-700 font-bold px-3 py-1 rounded-lg hover:bg-green-200">✅ Activar</button>
-                        <button onClick={() => handleReject(req)} className="bg-red-100 text-red-700 font-bold px-3 py-1 rounded-lg hover:bg-red-200">🔴 Rechazar</button>
+                        <button onClick={() => setConfirmModal({ open: true, type: 'activate', requestId: req.id, storeName: req.store_name, storeId: req.store_id, userEmail: req.user_email })} className="bg-green-100 text-green-700 font-bold px-3 py-1 rounded-lg hover:bg-green-200">✅ Activar</button>
+                        <button onClick={() => setConfirmModal({ open: true, type: 'reject', requestId: req.id, storeName: req.store_name, storeId: req.store_id, userEmail: req.user_email })} className="bg-red-100 text-red-700 font-bold px-3 py-1 rounded-lg hover:bg-red-200">🔴 Rechazar</button>
                         <a href={`mailto:${req.user_email}?subject=Sobre tu pago — Morshop Plus&body=Hola ${req.store_name},%0A%0A`} className="bg-blue-100 text-blue-700 font-bold px-3 py-1 rounded-lg hover:bg-blue-200 inline-flex items-center">✉️ Email</a>
                       </td>
                     </tr>
@@ -300,6 +308,112 @@ export default function AdminPanel() {
           <p className="text-sm text-gray-500">Ejecuta la función Edge para enviar emails a quienes vencen en 3 días o menos.</p>
         </div>
       </section>
+      </section>
+
+      {/* SECCIÓN 5: TEMPLATES DE EMAIL */}
+      <section className="bg-white border border-gray-200 rounded-2xl p-6 shadow-sm">
+        <h2 className="text-xl font-bold mb-1">📧 Templates de email</h2>
+        <p className="text-sm text-gray-500 mb-6">
+          Copiá el texto y pegalo en Gmail para avisarle al vendedor.
+        </p>
+
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          {/* Template 1 — Aprobado */}
+          <div className="border border-gray-200 rounded-xl p-5 relative flex flex-col">
+            <div className="flex items-center gap-2 mb-4">
+              <span className="bg-green-100 text-green-700 px-2 py-1 rounded text-xs font-bold">✅ Aprobado</span>
+              <h4 className="font-bold">Plan Plus activado</h4>
+            </div>
+            <div className="text-sm text-gray-700 space-y-3 flex-1" id="template-approved">
+              <p>Hola 👋</p>
+              <p>¡Confirmamos tu pago y tu Plan Plus de Morshop ya está activo!</p>
+              <p>A partir de ahora podés usar todas las funciones premium de tu tienda: productos ilimitados, redes sociales, estadísticas, formulario de pedido avanzado y mucho más.</p>
+              <p>Cualquier duda respondé este mail.</p>
+              <p>— El equipo de Morshop 🛍️</p>
+            </div>
+            <button
+              onClick={(e) => {
+                const text = document.getElementById('template-approved')?.innerText || '';
+                navigator.clipboard.writeText(text);
+                const btn = e.currentTarget;
+                const originalText = btn.innerText;
+                btn.innerText = '¡Copiado!';
+                setTimeout(() => { btn.innerText = originalText; }, 2000);
+              }}
+              className="mt-4 w-full bg-gray-100 hover:bg-gray-200 text-gray-800 font-bold px-4 py-2 rounded-lg transition-colors text-sm"
+            >
+              📋 Copiar texto
+            </button>
+          </div>
+
+          {/* Template 2 — Rechazado */}
+          <div className="border border-gray-200 rounded-xl p-5 relative flex flex-col">
+            <div className="flex items-center gap-2 mb-4">
+              <span className="bg-red-100 text-red-700 px-2 py-1 rounded text-xs font-bold">❌ Rechazado</span>
+              <h4 className="font-bold">Pago no confirmado</h4>
+            </div>
+            <div className="text-sm text-gray-700 space-y-3 flex-1" id="template-rejected">
+              <p>Hola 👋</p>
+              <p>Revisamos tu pago para el Plan Plus de Morshop y lamentablemente no pudimos confirmarlo.</p>
+              <p>Si ya realizaste la transferencia, respondé este mail con el comprobante y lo revisamos enseguida.</p>
+              <p>Si todavía no pagaste, podés hacerlo desde tu panel en cualquier momento.</p>
+              <p>— El equipo de Morshop 🛍️</p>
+            </div>
+            <button
+              onClick={(e) => {
+                const text = document.getElementById('template-rejected')?.innerText || '';
+                navigator.clipboard.writeText(text);
+                const btn = e.currentTarget;
+                const originalText = btn.innerText;
+                btn.innerText = '¡Copiado!';
+                setTimeout(() => { btn.innerText = originalText; }, 2000);
+              }}
+              className="mt-4 w-full bg-gray-100 hover:bg-gray-200 text-gray-800 font-bold px-4 py-2 rounded-lg transition-colors text-sm"
+            >
+              📋 Copiar texto
+            </button>
+          </div>
+        </div>
+      </section>
+
+      {/* MODAL DE CONFIRMACIÓN */}
+      {confirmModal?.open && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50">
+          <div className="bg-white rounded-2xl p-6 max-w-md w-full shadow-xl">
+            <h3 className="text-xl font-bold mb-2">
+              {confirmModal.type === 'activate' ? '¿Activar Plan Plus?' : '¿Rechazar Pago?'}
+            </h3>
+            <p className="text-gray-700 mb-2">
+              Estás por {confirmModal.type === 'activate' ? 'activar el plan Plus' : 'rechazar el pago'} para <strong className="text-black">{confirmModal.storeName}</strong>.
+            </p>
+            <p className="text-sm text-gray-500 mb-6">
+              Se actualizará el estado en la base de datos y se intentará enviar un email de aviso al vendedor.
+            </p>
+            <div className="flex gap-3 justify-end">
+              <button
+                onClick={() => setConfirmModal(null)}
+                className="px-4 py-2 rounded-lg font-bold text-gray-600 hover:bg-gray-100"
+              >
+                Cancelar
+              </button>
+              <button
+                onClick={() => {
+                  const fakeReq = { id: confirmModal.requestId, store_id: confirmModal.storeId, user_email: confirmModal.userEmail, store_name: confirmModal.storeName };
+                  if (confirmModal.type === 'activate') {
+                    handleActivate(fakeReq);
+                  } else {
+                    handleReject(fakeReq);
+                  }
+                  setConfirmModal(null);
+                }}
+                className={`px-4 py-2 rounded-lg font-bold text-white ${confirmModal.type === 'activate' ? 'bg-green-600 hover:bg-green-700' : 'bg-red-600 hover:bg-red-700'}`}
+              >
+                {confirmModal.type === 'activate' ? '✅ Confirmar activación' : '🔴 Confirmar rechazo'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

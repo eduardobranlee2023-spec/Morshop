@@ -1,7 +1,7 @@
 import { useEffect, useState, useRef } from 'react';
 import { supabase } from '../../lib/supabase';
 import { Link } from 'react-router-dom';
-import { Package, Star, Eye, Copy, Check, ExternalLink, Settings, Plus } from 'lucide-react';
+import { Copy, Check, ExternalLink, Settings, Plus } from 'lucide-react';
 import { motion } from 'framer-motion';
 
 function AnimatedNumber({ value }: { value: number }) {

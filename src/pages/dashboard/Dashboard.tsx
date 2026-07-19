@@ -156,60 +156,51 @@ export default function Dashboard() {
           </motion.div>
 
           {/* Metrics */}
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
-            <motion.div 
-              initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.4, delay: 0.2 }}
-              className="bg-white border border-[var(--border)] rounded-2xl shadow-[var(--shadow-sm)] p-6 hover:shadow-[var(--shadow-md)] hover:border-[var(--brand)]/30 transition-all duration-300"
-            >
-              <div className="w-12 h-12 bg-blue-50 text-blue-600 rounded-full flex items-center justify-center mb-4">
-                <Package size={24} />
+          <div className="bg-white border border-[var(--line)] rounded-[17px] p-6 shadow-[0_18px_45px_#0b285512] mb-6">
+            <h3 className="m-0 text-[21px] font-display font-bold text-[var(--navy-950)]">Resumen de actividad</h3>
+            
+            <div className="h-[100px] mt-[15px] rounded-[11px] relative overflow-hidden" style={{ background: 'linear-gradient(180deg,#dce7ff,#f8faff)' }}>
+              <svg viewBox="0 0 500 130" preserveAspectRatio="none" className="absolute inset-0 w-full h-full">
+                <path d="M0,99 C60,88 80,104 130,80 C180,55 190,88 250,51 C302,19 338,68 390,33 C430,7 455,31 500,8" fill="none" stroke="#284cff" strokeWidth="4"/>
+                <path d="M0,99 C60,88 80,104 130,80 C180,55 190,88 250,51 C302,19 338,68 390,33 C430,7 455,31 500,8 L500,130 L0,130Z" fill="#284cff12"/>
+              </svg>
+            </div>
+            
+            <div className="grid grid-cols-3 gap-[9px] mt-[12px]">
+              <div className="p-[10px] border border-[#e2e9f3] rounded-[9px] text-[9px] color-[#6b788c]">
+                PRODUCTOS
+                <b className="block font-display font-bold text-[16px] text-[var(--navy-950)] mt-[3px]">
+                  <AnimatedNumber value={stats.products} />
+                </b>
               </div>
-              <p className="text-[var(--text-2)] font-medium mb-1">Total de productos</p>
-              <div className="text-4xl font-extrabold text-[var(--text-1)]">
-                <AnimatedNumber value={stats.products} />
+              <div className="p-[10px] border border-[#e2e9f3] rounded-[9px] text-[9px] color-[#6b788c]">
+                DESTACADOS
+                <b className="block font-display font-bold text-[16px] text-[var(--navy-950)] mt-[3px]">
+                  <AnimatedNumber value={stats.featured} /><span className="text-gray-400 font-normal">/3</span>
+                </b>
               </div>
-            </motion.div>
-
-            <motion.div 
-              initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.4, delay: 0.3 }}
-              className="bg-white border border-[var(--border)] rounded-2xl shadow-[var(--shadow-sm)] p-6 hover:shadow-[var(--shadow-md)] hover:border-amber-500/30 transition-all duration-300"
-            >
-              <div className="w-12 h-12 bg-amber-50 text-amber-500 rounded-full flex items-center justify-center mb-4">
-                <Star size={24} />
+              <div className="p-[10px] border border-[#e2e9f3] rounded-[9px] text-[9px] color-[#6b788c]">
+                ESTADO
+                <b className="block font-display font-bold text-[14px] text-[var(--success)] mt-[3px] flex items-center">
+                  <span className="w-[6px] h-[6px] bg-[var(--success)] rounded-full mr-[4px]"></span>
+                  {store.is_published ? 'Activa' : 'Borrador'}
+                </b>
               </div>
-              <p className="text-[var(--text-2)] font-medium mb-1">Destacados activos</p>
-              <div className="text-4xl font-extrabold text-[var(--text-1)]">
-                <AnimatedNumber value={stats.featured} /><span className="text-[var(--text-3)] text-2xl">/3</span>
-              </div>
-            </motion.div>
-
-            <motion.div 
-              initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.4, delay: 0.4 }}
-              className="bg-white border border-[var(--border)] rounded-2xl shadow-[var(--shadow-sm)] p-6 hover:shadow-[var(--shadow-md)] hover:border-[var(--green)]/30 transition-all duration-300"
-            >
-              <div className="w-12 h-12 bg-emerald-50 text-[var(--green)] rounded-full flex items-center justify-center mb-4">
-                <Eye size={24} />
-              </div>
-              <p className="text-[var(--text-2)] font-medium mb-1">Estado actual</p>
-              <div className="mt-2 inline-flex items-center px-3 py-1.5 rounded-lg text-sm font-bold bg-emerald-50 text-emerald-700 border border-emerald-200">
-                <div className="w-2 h-2 rounded-full bg-emerald-500 mr-2 animate-pulse" />
-                {store.is_published ? 'Tienda Pública' : 'Borrador'}
-              </div>
-            </motion.div>
+            </div>
           </div>
 
           {/* Acciones Rápidas */}
           <motion.div 
             initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.4, delay: 0.5 }}
-            className="bg-white border border-[var(--border)] rounded-2xl shadow-[var(--shadow-sm)] p-6 sm:p-8"
+            className="bg-white border border-[var(--line)] rounded-[17px] shadow-[0_18px_45px_#0b285512] p-6 sm:p-8"
           >
-            <h3 className="font-bold text-[var(--text-1)] text-lg mb-6">Acciones rápidas</h3>
+            <h3 className="font-display font-bold text-[var(--navy-950)] text-lg mb-6">Acciones rápidas</h3>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              <Link to="/dashboard/products" className="flex items-center justify-center gap-3 bg-[var(--brand)] hover:bg-[var(--brand-dark)] text-white rounded-xl px-6 py-4 font-bold transition-all shadow-[var(--shadow-sm)] hover:shadow-md hover:scale-[1.01] active:scale-95">
+              <Link to="/dashboard/products" className="btn btn-primary w-full justify-center py-4 text-[15px]">
                 <Plus size={20} />
                 Agregar Producto
               </Link>
-              <Link to="/dashboard/store" className="flex items-center justify-center gap-3 bg-white border-2 border-[var(--border-strong)] hover:bg-[var(--surface-1)] text-[var(--text-1)] rounded-xl px-6 py-4 font-bold transition-all hover:scale-[1.01] active:scale-95">
+              <Link to="/dashboard/store" className="btn btn-secondary w-full justify-center py-4 text-[15px]">
                 <Settings size={20} />
                 Configurar Tienda
               </Link>

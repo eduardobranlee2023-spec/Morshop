@@ -144,19 +144,19 @@ export default function DashboardLayout() {
   }
 
   return (
-    <div className="min-h-screen flex bg-[var(--surface-1)]" style={{ fontFamily: 'Inter, system-ui, sans-serif' }}>
+    <div className="min-h-screen flex bg-[var(--sky-50)] font-sans">
       
       {/* Mobile Header (Glassmorphism) */}
-      <div className="md:hidden fixed top-0 left-0 right-0 h-[60px] bg-white/80 backdrop-blur-md border-b border-[var(--border)] z-30 flex items-center justify-between px-4">
+      <div className="md:hidden fixed top-0 left-0 right-0 h-[60px] bg-white/80 backdrop-blur-md border-b border-[var(--line)] z-30 flex items-center justify-between px-4">
         <button 
           onClick={() => setSidebarOpen(true)}
-          className="w-10 h-10 flex items-center justify-center text-[var(--text-2)] rounded-full hover:bg-[var(--surface-2)] active:bg-[var(--surface-inset)] transition-colors"
+          className="w-10 h-10 flex items-center justify-center text-[var(--text)] rounded-full hover:bg-[var(--sky-50)] transition-colors"
           aria-label="Abrir menú"
         >
           <Menu size={24} />
         </button>
-        <Link to="/" className="flex items-center">
-          <img src="/logo-completo-2.png" alt="Morshop" className="h-[24px] w-auto object-contain" />
+        <Link to="/" className="flex items-center font-display font-extrabold text-[17px] tracking-tight">
+          <span className="text-[var(--navy-950)]">Mor</span><b className="text-[var(--blue-600)]">shop</b>
         </Link>
         <div className="w-10 h-10" /> {/* Spacer to perfectly center the logo */}
       </div>
@@ -178,9 +178,9 @@ export default function DashboardLayout() {
           md:relative md:translate-x-0
         `}
       >
-        <div className="h-[60px] md:h-[72px] flex items-center justify-between px-6 border-b border-[var(--border)] shrink-0">
-          <Link to="/" className="flex items-center group">
-            <img src="/logo-completo-2.png" alt="Morshop" className="h-[26px] w-auto object-contain transition-transform duration-300 group-hover:scale-105" />
+        <div className="h-[60px] md:h-[72px] flex items-center justify-between px-6 border-b border-[var(--line)] shrink-0">
+          <Link to="/" className="flex items-center font-display font-extrabold text-[20px] tracking-tight group">
+            <span className="text-[var(--navy-950)]">Mor</span><b className="text-[var(--blue-600)]">shop</b>
           </Link>
           <button 
             className="md:hidden w-8 h-8 flex items-center justify-center text-[var(--text-3)] hover:text-[var(--text-1)] rounded-full hover:bg-[var(--surface-2)] transition-colors"

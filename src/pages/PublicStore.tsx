@@ -116,11 +116,17 @@ export default function PublicStore() {
     }
   }, [store?.id]);
 
-  if (loading) return <div className="min-h-screen flex items-center justify-center font-sans">Cargando tienda...</div>;
+  if (loading) return (
+    <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', fontFamily: '"DM Sans", sans-serif', background: '#f6f8ff', flexDirection: 'column', gap: '12px' }}>
+      <div style={{ width: '36px', height: '36px', border: '3px solid #284cff', borderTopColor: 'transparent', borderRadius: '50%', animation: 'spin 0.7s linear infinite' }}></div>
+      <p style={{ color: '#53627a', fontSize: '14px', margin: 0 }}>Cargando tienda...</p>
+    </div>
+  );
   if (!store) return (
-    <div className="min-h-screen flex flex-col items-center justify-center bg-neutral-50 p-4 font-sans">
-      <h1 className="text-2xl font-bold mb-2">Tienda no encontrada</h1>
-      <p className="text-neutral-600">La tienda no existe o no está publicada.</p>
+    <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', background: '#f6f8ff', padding: '16px', fontFamily: '"DM Sans", sans-serif' }}>
+      <div style={{ fontSize: '48px', marginBottom: '16px' }}>🏪</div>
+      <h1 style={{ fontFamily: 'Outfit, sans-serif', fontSize: '24px', fontWeight: 700, margin: '0 0 8px', color: '#061a40' }}>Tienda no encontrada</h1>
+      <p style={{ color: '#53627a', margin: 0 }}>La tienda no existe o no está publicada.</p>
     </div>
   );
 
@@ -238,55 +244,67 @@ ${orderForm.note ? `📝 *Nota:* ${orderForm.note}` : ''}
 
   const ProductCard = ({ product }: { product: any }) => {
     const isAdded = addedMessageId === product.id;
+    const catName = categories.find(c => c.id === product.category_id)?.name;
     return (
-      <motion.div 
-        whileHover={{ y: -4, boxShadow: '0 8px 24px rgba(0,0,0,0.10)' }}
-        transition={{ duration: 0.18 }}
+      <motion.div
+        whileHover={{ y: -4, boxShadow: '0 18px 40px rgba(11,40,85,0.12)' }}
+        transition={{ duration: 0.2 }}
         onClick={() => setSelectedProduct(product)}
-        className="bg-white rounded-[12px] shadow-[0_2px_8px_rgba(0,0,0,0.08)] transition-all duration-200 cursor-pointer flex flex-col h-full overflow-hidden"
+        style={{
+          cursor: 'pointer', display: 'flex', flexDirection: 'column', height: '100%',
+          background: 'white', border: '1px solid #dbe4f4', borderRadius: '14px',
+          overflow: 'hidden', boxShadow: '0 6px 17px rgba(12,42,86,0.04)', position: 'relative'
+        }}
       >
-        <div className="w-full aspect-square bg-neutral-100 relative shrink-0 overflow-hidden">
-          {product.original_price && (
-            <div className="absolute top-2 left-2 z-10 bg-black text-white text-[10px] font-bold tracking-wider px-2 py-1 uppercase">
-              OFERTA
-            </div>
-          )}
-          {product.is_featured && (
-            <div className="absolute top-2 right-2 z-10 bg-[#D4A017] text-[#1a1a1a] text-[10px] font-bold tracking-wider px-2 py-1 uppercase">
-              DESTACADO
-            </div>
-          )}
+        {product.original_price && (
+          <div style={{
+            position: 'absolute', top: '10px', left: '10px', zIndex: 10,
+            background: '#061a40', color: 'white', fontSize: '9px', fontWeight: 700,
+            letterSpacing: '0.08em', padding: '4px 9px', borderRadius: '6px', textTransform: 'uppercase'
+          }}>OFERTA</div>
+        )}
+        {product.is_featured && (
+          <div style={{
+            position: 'absolute', top: '10px', right: '10px', zIndex: 10,
+            background: '#e7edff', color: '#284cff', fontSize: '9px', fontWeight: 700,
+            letterSpacing: '0.06em', padding: '4px 9px', borderRadius: '6px', textTransform: 'uppercase'
+          }}>✦ DEST.</div>
+        )}
+
+        <div style={{ height: '160px', flexShrink: 0, background: '#f6f8ff', overflow: 'hidden' }}>
           {product.image_url ? (
-            <img src={product.image_url} alt={product.name} className="absolute inset-0 w-full h-full" style={{ objectFit: product.image_fit || 'cover', objectPosition: 'center', background: '#f5f5f5' }} />
+            <img src={product.image_url} alt={product.name}
+              style={{ width: '100%', height: '100%', objectFit: product.image_fit || 'cover', objectPosition: 'center', display: 'block' }} />
           ) : (
-            <div className="absolute inset-0 w-full h-full flex items-center justify-center text-neutral-300"><ImageIcon size={24} /></div>
+            <div style={{ width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#c8d3e8' }}>
+              <ImageIcon size={28} />
+            </div>
           )}
         </div>
-        
-        <div className="p-[10px] flex flex-col flex-1">
-          <h3 className="text-[13px] font-bold text-[var(--text-1)] mb-1 line-clamp-2 leading-snug">{product.name}</h3>
-          <div className="mt-auto flex flex-col pt-1">
-            {product.original_price && <div className="text-[11px] text-neutral-400 line-through mb-0.5">${product.original_price}</div>}
-            <div className="text-[16px] font-bold leading-none" style={{ color: 'var(--store-primary)' }}>${product.price}</div>
+
+        <div style={{ padding: '12px 13px', display: 'flex', flexDirection: 'column', flex: 1 }}>
+          {catName && <span style={{ fontSize: '10px', color: '#68768b', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: '4px' }}>{catName}</span>}
+          <p style={{ fontFamily: 'Outfit, sans-serif', fontWeight: 700, fontSize: '14px', margin: 0, lineHeight: 1.3, color: '#0e2142', display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden' }}>{product.name}</p>
+          <div style={{ marginTop: 'auto', paddingTop: '10px' }}>
+            {product.original_price && <div style={{ fontSize: '11px', color: '#9ca3af', textDecoration: 'line-through', marginBottom: '2px' }}>${product.original_price}</div>}
+            <p style={{ fontFamily: 'Outfit, sans-serif', fontWeight: 700, fontSize: '16px', color: primaryColor, margin: 0 }}>${product.price}</p>
           </div>
         </div>
 
-        <div className="mt-2 shrink-0">
-          <motion.button
-            whileTap={{ scale: 0.96 }}
-            onClick={(e) => addToCart(product, 1, e)}
-            disabled={!product.available}
-            className="w-full h-[38px] text-[12px] font-bold flex items-center justify-center rounded-none"
-            style={{ 
-              backgroundColor: product.available ? (isAdded ? '#137333' : primaryColor) : '#f5f5f5',
-              color: product.available ? (isAdded ? '#ffffff' : contrastColor) : '#a3a3a3',
-              border: 'none',
-              cursor: product.available ? 'pointer' : 'not-allowed'
-            }}
-          >
-            {product.available ? (isAdded ? '✓ Agregado' : 'Agregar al carrito') : 'Sin stock'}
-          </motion.button>
-        </div>
+        <button
+          onClick={(e) => addToCart(product, 1, e)}
+          disabled={!product.available}
+          style={{
+            width: '100%', height: '42px', border: 'none', cursor: product.available ? 'pointer' : 'not-allowed',
+            fontFamily: '"DM Sans", sans-serif', fontWeight: 700, fontSize: '13px',
+            borderRadius: '0 0 14px 14px',
+            transition: 'all 0.2s',
+            backgroundColor: !product.available ? '#f1f5f9' : isAdded ? '#26c768' : primaryColor,
+            color: !product.available ? '#94a3b8' : '#ffffff',
+          }}
+        >
+          {!product.available ? 'Sin stock' : isAdded ? '✓ Agregado' : 'Agregar al carrito'}
+        </button>
       </motion.div>
     );
   };
@@ -298,7 +316,7 @@ ${orderForm.note ? `📝 *Nota:* ${orderForm.note}` : ''}
   ].filter(Boolean) : [];
 
   return (
-    <div style={storeTheme} className="min-h-screen flex flex-col bg-white">
+    <div style={{ ...storeTheme, minHeight: '100vh', display: 'flex', flexDirection: 'column', background: '#f6f8ff', fontFamily: '"DM Sans", sans-serif' }}>
       
       {/* 1. Announcement Bar con Animación Loop */}
       {announcements.length > 0 && (
@@ -329,34 +347,44 @@ ${orderForm.note ? `📝 *Nota:* ${orderForm.note}` : ''}
         </div>
       )}
 
-      {/* 2. Header (64px) */}
-      <header className="sticky top-0 z-40 shadow-[0_2px_8px_rgba(0,0,0,0.06)]" style={{ height: '64px', backgroundColor: 'var(--store-secondary)' }}>
-        <div className="h-full px-4 md:px-8 flex items-center justify-between max-w-7xl mx-auto">
-          <div className="flex items-center min-w-0">
+      {/* 2. Header */}
+      <header style={{
+        position: 'sticky', top: 0, zIndex: 40, height: '64px',
+        background: store.secondary_color || '#ffffff',
+        borderBottom: '1px solid #dbe4f4',
+        boxShadow: '0 2px 12px rgba(11,40,85,0.06)'
+      }}>
+        <div style={{ height: '100%', padding: '0 16px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', maxWidth: '1280px', margin: '0 auto' }}>
+          <div style={{ display: 'flex', alignItems: 'center', minWidth: 0, gap: '12px' }}>
             {store.logo_url ? (
-              <img src={store.logo_url} alt={store.name} className="h-[44px] w-auto object-contain mr-3 shrink-0" />
+              <img src={store.logo_url} alt={store.name} style={{ height: '40px', width: 'auto', objectFit: 'contain', flexShrink: 0 }} />
             ) : (
-              <div className="h-[40px] w-[40px] shrink-0 rounded-full flex items-center justify-center font-bold text-lg mr-3" style={{ backgroundColor: primaryColor, color: contrastColor }}>
+              <div style={{ width: '40px', height: '40px', flexShrink: 0, borderRadius: '12px', display: 'flex', alignItems: 'center', justifyContent: 'center', fontFamily: 'Outfit, sans-serif', fontWeight: 800, fontSize: '18px', backgroundColor: primaryColor, color: contrastColor }}>
                 {store.name.charAt(0).toUpperCase()}
               </div>
             )}
-            <div>
-              <h1 className="font-bold truncate text-[16px] md:text-[18px] text-[var(--text-1)] m-0 leading-tight">{store.name}</h1>
+            <div style={{ minWidth: 0 }}>
+              <h1 style={{ fontFamily: 'Outfit, sans-serif', fontWeight: 800, fontSize: '17px', margin: 0, lineHeight: 1.2, color: '#0e2142', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{store.name}</h1>
               {store.description && (
-                <p className="text-[13px] text-neutral-500 m-0 italic mt-0.5 truncate">{store.description}</p>
+                <p style={{ fontSize: '12px', color: '#53627a', margin: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{store.description}</p>
               )}
             </div>
           </div>
-          <button onClick={() => setIsCartOpen(true)} className="relative p-2 shrink-0 ml-2 text-[var(--text-1)]">
-            <ShoppingCart size={24} />
+          <button onClick={() => setIsCartOpen(true)} style={{ position: 'relative', padding: '10px', background: 'none', border: 'none', cursor: 'pointer', color: '#0e2142', flexShrink: 0 }}>
+            <ShoppingCart size={22} />
             {cartCount > 0 && (
-              <motion.div 
+              <motion.div
                 key={cartCount}
                 initial={{ scale: 1.5, opacity: 0 }}
                 animate={{ scale: 1, opacity: 1 }}
                 transition={{ type: 'spring', stiffness: 400, damping: 15 }}
-                className="absolute top-0 right-0 w-[20px] h-[20px] rounded-full flex items-center justify-center text-[11px] font-bold shadow-sm" 
-                style={{ backgroundColor: primaryColor, color: contrastColor }}
+                style={{
+                  position: 'absolute', top: '4px', right: '4px',
+                  width: '20px', height: '20px', borderRadius: '50%',
+                  display: 'flex', alignItems: 'center', justifyContent: 'center',
+                  fontSize: '10px', fontWeight: 700,
+                  backgroundColor: primaryColor, color: contrastColor
+                }}
               >
                 {cartCount}
               </motion.div>
@@ -404,37 +432,39 @@ ${orderForm.note ? `📝 *Nota:* ${orderForm.note}` : ''}
 
       {/* 4. Categorías */}
       {categories.length > 0 && (
-        <div className="w-full overflow-x-auto no-scrollbar py-4 bg-white border-b border-[var(--border)]">
-          <div className="flex items-center gap-2 px-4 min-w-max max-w-7xl mx-auto">
-            <button
-              onClick={() => setActiveCategoryId(null)}
-              className="px-5 h-[36px] rounded-full text-[14px] font-bold border transition-colors flex items-center justify-center shrink-0"
-              style={{ backgroundColor: activeCategoryId === null ? primaryColor : 'transparent', color: activeCategoryId === null ? contrastColor : primaryColor, borderColor: primaryColor }}
-            >
-              Todos
-            </button>
-            {categories.map(cat => (
-              <button
-                key={cat.id}
-                onClick={() => setActiveCategoryId(cat.id)}
-                className="px-5 h-[36px] rounded-full text-[14px] font-bold border transition-colors flex items-center justify-center shrink-0"
-                style={{ backgroundColor: activeCategoryId === cat.id ? primaryColor : 'transparent', color: activeCategoryId === cat.id ? contrastColor : primaryColor, borderColor: primaryColor }}
-              >
-                {cat.name}
-              </button>
-            ))}
+        <div style={{ width: '100%', overflowX: 'auto', background: '#ffffff', borderBottom: '1px solid #dbe4f4', padding: '12px 0' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '0 16px', minWidth: 'max-content', maxWidth: '1280px', margin: '0 auto' }}>
+            {[{ id: null, name: 'Todos' }, ...categories].map((cat: any) => {
+              const isActive = activeCategoryId === cat.id;
+              return (
+                <button
+                  key={cat.id ?? 'all'}
+                  onClick={() => setActiveCategoryId(cat.id)}
+                  style={{
+                    height: '36px', padding: '0 18px', borderRadius: '99px',
+                    border: `1.5px solid ${isActive ? primaryColor : '#dbe4f4'}`,
+                    background: isActive ? primaryColor : 'white',
+                    color: isActive ? contrastColor : '#53627a',
+                    fontFamily: '"DM Sans", sans-serif', fontWeight: 700, fontSize: '13px',
+                    cursor: 'pointer', flexShrink: 0, transition: 'all 0.18s'
+                  }}
+                >
+                  {cat.name}
+                </button>
+              );
+            })}
           </div>
         </div>
       )}
 
-      <main className="flex-1 max-w-7xl mx-auto w-full pb-12">
+      <main style={{ flex: 1, maxWidth: '1280px', margin: '0 auto', width: '100%', paddingBottom: '80px' }}>
         {/* Destacados */}
         {featuredProducts.length > 0 && activeCategoryId === null && (
-          <div className="mt-8 mb-10 px-4 md:px-6 overflow-hidden">
-            <h2 className="text-[18px] font-extrabold text-[var(--text-1)] mb-4">⭐ Destacados</h2>
-            <motion.div variants={containerVariants} initial="hidden" animate="visible" className="flex overflow-x-auto no-scrollbar gap-4 pb-4 -mx-4 px-4 md:mx-0 md:px-0">
+          <div style={{ marginTop: '28px', marginBottom: '24px', padding: '0 16px', overflow: 'hidden' }}>
+            <h2 style={{ fontFamily: 'Outfit, sans-serif', fontSize: '16px', fontWeight: 700, color: '#0e2142', margin: '0 0 16px', letterSpacing: '-0.03em' }}>✦ Destacados</h2>
+            <motion.div variants={containerVariants} initial="hidden" animate="visible" style={{ display: 'flex', overflowX: 'auto', gap: '12px', paddingBottom: '12px', marginLeft: '-16px', paddingLeft: '16px', marginRight: '-16px', paddingRight: '16px' }}>
               {featuredProducts.map(p => (
-                <motion.div key={p.id} variants={cardVariants} className="w-[160px] md:w-[220px] shrink-0">
+                <motion.div key={p.id} variants={cardVariants} style={{ width: '160px', flexShrink: 0 }}>
                   <ProductCard product={p} />
                 </motion.div>
               ))}
@@ -443,10 +473,12 @@ ${orderForm.note ? `📝 *Nota:* ${orderForm.note}` : ''}
         )}
 
         {/* Grilla principal */}
-        <div className="mt-8 px-4 md:px-6">
-          {featuredProducts.length > 0 && activeCategoryId === null && <h2 className="text-[18px] font-extrabold text-[var(--text-1)] mb-4">Todos los productos</h2>}
+        <div style={{ marginTop: featuredProducts.length > 0 && activeCategoryId === null ? '0' : '28px', padding: '0 16px' }}>
+          {featuredProducts.length > 0 && activeCategoryId === null && (
+            <h2 style={{ fontFamily: 'Outfit, sans-serif', fontSize: '16px', fontWeight: 700, color: '#0e2142', margin: '0 0 16px', letterSpacing: '-0.03em' }}>Todos los productos</h2>
+          )}
           {displayedProducts.length === 0 ? (
-            <div className="text-center py-16 text-[var(--text-2)] font-medium">No hay productos en esta sección.</div>
+            <div style={{ textAlign: 'center', padding: '64px 0', color: '#53627a', fontWeight: 600 }}>No hay productos en esta sección.</div>
           ) : (
             <AnimatePresence mode="wait">
               <motion.div
@@ -456,7 +488,8 @@ ${orderForm.note ? `📝 *Nota:* ${orderForm.note}` : ''}
                 animate="visible"
                 exit={{ opacity: 0 }}
                 transition={{ duration: 0.2 }}
-                className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-[10px] sm:gap-[12px] lg:gap-[16px]"
+                style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '10px' }}
+                className="sm:grid-cols-3 lg:grid-cols-4"
               >
                 {displayedProducts.map(p => (
                   <motion.div key={p.id} variants={cardVariants}>
@@ -470,12 +503,23 @@ ${orderForm.note ? `📝 *Nota:* ${orderForm.note}` : ''}
 
         {/* Sobre la tienda */}
         {store.about_text && (
-          <div className="mt-16 px-4 md:px-6 max-w-3xl mx-auto">
-            <button onClick={() => setIsAboutExpanded(!isAboutExpanded)} className="w-full flex items-center justify-between py-5 border-t border-[var(--border)]">
-              <h2 className="text-[16px] font-bold">ℹ️ Sobre esta tienda</h2>
-              {isAboutExpanded ? <ChevronUp size={20} /> : <ChevronDown size={20} />}
+          <div style={{ marginTop: '40px', padding: '0 16px', maxWidth: '760px', margin: '40px auto 0' }}>
+            <button
+              onClick={() => setIsAboutExpanded(!isAboutExpanded)}
+              style={{
+                width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+                padding: '18px 20px', border: '1px solid #dbe4f4', borderRadius: '14px',
+                background: 'white', cursor: 'pointer', boxShadow: '0 6px 17px rgba(12,42,86,0.04)'
+              }}
+            >
+              <span style={{ fontFamily: 'Outfit, sans-serif', fontWeight: 700, fontSize: '16px', color: '#0e2142' }}>ℹ️ Sobre esta tienda</span>
+              {isAboutExpanded ? <ChevronUp size={18} color="#53627a" /> : <ChevronDown size={18} color="#53627a" />}
             </button>
-            {isAboutExpanded && <div className="pb-8 text-[14px] text-[var(--text-2)] whitespace-pre-wrap leading-relaxed animate-in fade-in">{store.about_text}</div>}
+            {isAboutExpanded && (
+              <div style={{ marginTop: '1px', padding: '20px', border: '1px solid #dbe4f4', borderTop: 'none', borderRadius: '0 0 14px 14px', background: 'white', fontSize: '14px', color: '#53627a', lineHeight: 1.65, whiteSpace: 'pre-wrap' }}>
+                {store.about_text}
+              </div>
+            )}
           </div>
         )}
       </main>
@@ -537,10 +581,14 @@ ${orderForm.note ? `📝 *Nota:* ${orderForm.note}` : ''}
       )}
 
       {/* Footer Público */}
-      <footer className="bg-[#F8FAFC] py-8 text-center mt-auto border-t border-[var(--border)]">
-        <p className="font-bold text-[14px] text-[var(--text-1)] mb-1">{store.name}</p>
+      <footer style={{ background: '#061a40', padding: '28px 16px', textAlign: 'center', marginTop: 'auto', borderTop: '1px solid rgba(255,255,255,0.06)' }}>
+        <p style={{ fontFamily: 'Outfit, sans-serif', fontWeight: 700, fontSize: '15px', color: 'white', margin: '0 0 4px' }}>{store.name}</p>
         {store.plan !== 'plus' && (
-          <p className="text-[12px] text-[var(--text-3)] font-medium">Creá tu tienda gratis en <a href="https://morshop.vercel.app" className="underline text-[var(--brand)] hover:text-[var(--brand-dark)]">morshop.com</a></p>
+          <p style={{ fontSize: '12px', color: '#8fa5cc', margin: 0 }}>
+            Tienda creada con{' '}
+            <a href="https://morshop.vercel.app" style={{ color: '#6f8cff', fontWeight: 600, textDecoration: 'none' }}>Morshop</a>
+            {' '}— Tu tienda. Tu marca.
+          </p>
         )}
       </footer>
 
@@ -703,36 +751,45 @@ ${orderForm.note ? `📝 *Nota:* ${orderForm.note}` : ''}
 
       {/* Cart Drawer */}
       {isCartOpen && (
-        <div className="fixed inset-0 z-[100] flex justify-end bg-black/60 animate-in fade-in" onClick={() => setIsCartOpen(false)}>
-          <div className="bg-white w-full md:w-[400px] h-[100vh] flex flex-col animate-in slide-in-from-right" onClick={e => e.stopPropagation()}>
-            <div className="h-[72px] border-b border-[var(--border)] flex items-center justify-between px-6 shrink-0">
-              <h2 className="font-extrabold text-[18px]">Tu pedido</h2>
-              <button onClick={() => setIsCartOpen(false)} className="w-[40px] h-[40px] flex items-center justify-center rounded-full hover:bg-[var(--surface-1)]"><X size={24} /></button>
+        <div
+          style={{ position: 'fixed', inset: 0, zIndex: 100, display: 'flex', justifyContent: 'flex-end', background: 'rgba(6,26,64,0.55)', backdropFilter: 'blur(3px)' }}
+          onClick={() => setIsCartOpen(false)}
+        >
+          <div
+            style={{ background: 'white', width: '100%', maxWidth: '400px', height: '100vh', display: 'flex', flexDirection: 'column', boxShadow: '-20px 0 60px rgba(6,26,64,0.15)' }}
+            onClick={e => e.stopPropagation()}
+          >
+            {/* Cart Header */}
+            <div style={{ height: '68px', borderBottom: '1px solid #dbe4f4', display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '0 24px', flexShrink: 0 }}>
+              <h2 style={{ fontFamily: 'Outfit, sans-serif', fontWeight: 800, fontSize: '18px', margin: 0, color: '#0e2142' }}>Tu pedido</h2>
+              <button onClick={() => setIsCartOpen(false)} style={{ width: '36px', height: '36px', display: 'flex', alignItems: 'center', justifyContent: 'center', borderRadius: '50%', border: '1px solid #dbe4f4', background: 'white', cursor: 'pointer' }}><X size={18} /></button>
             </div>
-            <div className="flex-1 overflow-y-auto p-6 no-scrollbar">
+
+            {/* Cart Items */}
+            <div style={{ flex: 1, overflowY: 'auto', padding: '20px 24px' }}>
               {cart.length === 0 ? (
-                <div className="h-full flex flex-col items-center justify-center text-[var(--text-3)]">
-                  <ShoppingCart size={48} className="mb-4 opacity-50" />
-                  <p className="font-bold text-[16px]">Tu carrito está vacío</p>
+                <div style={{ height: '100%', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: '12px', color: '#94a3b8' }}>
+                  <ShoppingCart size={44} strokeWidth={1.5} />
+                  <p style={{ fontFamily: 'Outfit, sans-serif', fontWeight: 700, fontSize: '16px', margin: 0, color: '#53627a' }}>Tu carrito está vacío</p>
                 </div>
               ) : (
-                <div className="flex flex-col gap-6">
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
                   {cart.map(item => (
-                    <div key={item.id} className="flex gap-4">
-                      <div className="w-[72px] h-[72px] rounded-xl bg-neutral-100 overflow-hidden shrink-0">
-                        {item.image_url ? <img src={item.image_url} className="w-full h-full object-cover" /> : <div className="w-full h-full flex items-center justify-center"><ImageIcon size={24} /></div>}
+                    <div key={item.id} style={{ display: 'flex', gap: '14px', alignItems: 'center' }}>
+                      <div style={{ width: '68px', height: '68px', borderRadius: '12px', background: '#f6f8ff', overflow: 'hidden', flexShrink: 0, border: '1px solid #dbe4f4' }}>
+                        {item.image_url ? <img src={item.image_url} style={{ width: '100%', height: '100%', objectFit: 'cover' }} /> : <div style={{ width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center' }}><ImageIcon size={22} color="#c8d3e8" /></div>}
                       </div>
-                      <div className="flex-1 flex flex-col">
-                        <h4 className="font-bold text-[14px] leading-snug mb-1">{item.name}</h4>
-                        <div className="flex items-center justify-between mt-auto">
-                          <span className="font-bold text-[16px]" style={{ color: primaryColor }}>${item.price}</span>
-                          <div className="flex items-center gap-3">
-                            <div className="flex items-center bg-[var(--surface-1)] rounded-lg h-[32px] border border-[var(--border)]">
-                              <button onClick={() => updateCartQuantity(item.id, -1)} className="w-8 h-full flex items-center justify-center font-bold">-</button>
-                              <span className="text-[13px] font-bold w-4 text-center">{item.quantity}</span>
-                              <button onClick={() => updateCartQuantity(item.id, 1)} className="w-8 h-full flex items-center justify-center font-bold">+</button>
+                      <div style={{ flex: 1, display: 'flex', flexDirection: 'column', minWidth: 0 }}>
+                        <p style={{ fontWeight: 700, fontSize: '14px', margin: '0 0 8px', lineHeight: 1.3, color: '#0e2142', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{item.name}</p>
+                        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                          <span style={{ fontFamily: 'Outfit, sans-serif', fontWeight: 700, fontSize: '16px', color: primaryColor }}>${item.price}</span>
+                          <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                            <div style={{ display: 'flex', alignItems: 'center', border: '1px solid #dbe4f4', borderRadius: '9px', height: '32px', overflow: 'hidden' }}>
+                              <button onClick={() => updateCartQuantity(item.id, -1)} style={{ width: '30px', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'none', border: 'none', cursor: 'pointer', fontWeight: 700, color: '#0e2142' }}>-</button>
+                              <span style={{ fontSize: '13px', fontWeight: 700, width: '24px', textAlign: 'center', color: '#0e2142' }}>{item.quantity}</span>
+                              <button onClick={() => updateCartQuantity(item.id, 1)} style={{ width: '30px', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'none', border: 'none', cursor: 'pointer', fontWeight: 700, color: '#0e2142' }}>+</button>
                             </div>
-                            <button onClick={() => removeFromCart(item.id)} className="text-red-500 hover:text-red-600"><Trash2 size={18} /></button>
+                            <button onClick={() => removeFromCart(item.id)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#df5e69', display: 'flex' }}><Trash2 size={17} /></button>
                           </div>
                         </div>
                       </div>
@@ -741,16 +798,22 @@ ${orderForm.note ? `📝 *Nota:* ${orderForm.note}` : ''}
                 </div>
               )}
             </div>
+
+            {/* Cart Footer */}
             {cart.length > 0 && (
-              <div className="p-6 border-t border-[var(--border)] shadow-[0_-8px_20px_rgba(0,0,0,0.04)]">
-                <div className="flex justify-between items-end mb-4">
-                  <span className="font-bold text-[var(--text-2)]">Total</span>
-                  <span className="font-extrabold text-[24px]">${cartTotal}</span>
+              <div style={{ padding: '20px 24px', borderTop: '1px solid #dbe4f4', boxShadow: '0 -8px 24px rgba(11,40,85,0.06)' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', marginBottom: '16px' }}>
+                  <span style={{ fontWeight: 600, fontSize: '14px', color: '#53627a' }}>Total</span>
+                  <span style={{ fontFamily: 'Outfit, sans-serif', fontWeight: 800, fontSize: '26px', color: '#0e2142' }}>${cartTotal.toLocaleString('es-AR')}</span>
                 </div>
-                <button onClick={handleWhatsAppCart} className="w-full h-[56px] rounded-xl font-bold text-white text-[16px] flex items-center justify-center gap-2 mb-3" style={{ backgroundColor: '#25D366' }}>
-                  <MessageCircle size={22} /> Enviar pedido por WhatsApp
+                <button onClick={handleWhatsAppCart} style={{
+                  width: '100%', height: '52px', borderRadius: '12px', border: 'none', cursor: 'pointer',
+                  background: '#25D366', color: 'white', fontFamily: '"DM Sans", sans-serif', fontWeight: 700, fontSize: '15px',
+                  display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px', marginBottom: '10px'
+                }}>
+                  <MessageCircle size={20} /> Enviar pedido por WhatsApp
                 </button>
-                <button onClick={() => setIsCartOpen(false)} className="w-full py-2 font-bold text-[14px]" style={{ color: primaryColor }}>Seguir comprando</button>
+                <button onClick={() => setIsCartOpen(false)} style={{ width: '100%', padding: '10px', background: 'none', border: 'none', cursor: 'pointer', fontWeight: 700, fontSize: '14px', color: primaryColor }}>Seguir comprando</button>
               </div>
             )}
           </div>
@@ -912,6 +975,18 @@ ${orderForm.note ? `📝 *Nota:* ${orderForm.note}` : ''}
             Tocá en cualquier lado para cerrar
           </p>
         </div>
+      )}
+
+      {/* Floating WhatsApp CTA */}
+      {!isCartOpen && store.whatsapp_number && cartCount === 0 && (
+        <a 
+          href={`https://wa.me/${store.whatsapp_number}`} 
+          target="_blank" 
+          rel="noreferrer"
+          className="fixed bottom-6 left-1/2 -translate-x-1/2 bg-[var(--success)] text-white font-display font-bold px-6 py-[14px] rounded-full shadow-[0_8px_24px_rgba(37,211,102,0.3)] flex items-center gap-2 z-30 transition-transform hover:scale-105 text-[15px]"
+        >
+          <span className="w-2 h-2 rounded-full bg-white block mr-1 animate-pulse" /> Consultar por WhatsApp
+        </a>
       )}
     </div>
   );

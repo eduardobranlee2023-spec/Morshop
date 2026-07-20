@@ -233,3 +233,124 @@ h1, h2, h3, h4, h5, h6 {
   -ms-overflow-style: none;
   scrollbar-width: none;
 }
+
+/* Order Form */
+.order-form-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 1000;
+  display: flex;
+  justify-content: center;
+  align-items: flex-end;
+  background: rgba(0,0,0,0.5);
+  backdrop-filter: blur(2px);
+}
+@media (min-width: 768px) {
+  .order-form-overlay {
+    align-items: center;
+  }
+}
+.order-form-sheet {
+  background: white;
+  width: 100%;
+  max-width: 480px;
+  border-radius: 20px 20px 0 0;
+  display: flex;
+  flex-direction: column;
+  max-height: 90vh;
+  box-shadow: 0 -10px 40px rgba(0,0,0,0.1);
+}
+@media (min-width: 768px) {
+  .order-form-sheet {
+    border-radius: 16px;
+    box-shadow: 0 10px 40px rgba(0,0,0,0.1);
+  }
+}
+.order-form-header {
+  padding: 20px 24px;
+  border-bottom: 1px solid #f0f0f0;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+.order-form-body {
+  padding: 24px;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+.form-field {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.form-field label {
+  font-size: 14px;
+  font-weight: 700;
+  color: #1a1a1a;
+}
+.form-field input, .form-field textarea {
+  border: 1px solid #d1d5db;
+  border-radius: 10px;
+  padding: 12px 14px;
+  font-family: inherit;
+  font-size: 14px;
+  width: 100%;
+  transition: all 0.2s;
+}
+.form-field input:focus, .form-field textarea:focus {
+  outline: none;
+  border-color: var(--blue-600);
+  box-shadow: 0 0 0 3px var(--blue-100);
+}
+.payment-options {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+.payment-option-btn {
+  padding: 8px 16px;
+  border: 1px solid #d1d5db;
+  border-radius: 20px;
+  background: transparent;
+  cursor: pointer;
+  font-weight: 500;
+  font-size: 13px;
+  transition: all 0.2s;
+  color: #4b5563;
+}
+.payment-option-btn.selected {
+  border-color: var(--blue-600);
+  background: var(--blue-100);
+  color: var(--blue-600);
+  font-weight: 700;
+}
+.order-form-footer {
+  padding: 20px 24px;
+  border-top: 1px solid #f0f0f0;
+  background: #fafafa;
+}
+.whatsapp-submit-btn {
+  width: 100%;
+  height: 50px;
+  border-radius: 12px;
+  border: none;
+  background: #25D366;
+  color: white;
+  font-weight: 700;
+  font-size: 15px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  cursor: pointer;
+  transition: transform 0.2s;
+}
+.whatsapp-submit-btn:hover:not(:disabled) {
+  transform: scale(0.98);
+}
+.whatsapp-submit-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
